@@ -265,3 +265,229 @@ class TestEmptyGraph:
         g = KnowledgeGraph()
         count = process_dead_code(g)
         assert count == 0
+
+
+# ---------------------------------------------------------------------------
+# Helpers for USES_TYPE and EXTENDS relationships
+# ---------------------------------------------------------------------------
+
+
+def _add_uses_type_relationship(
+    graph: KnowledgeGraph,
+    source_id: str,
+    target_id: str,
+) -> None:
+    """Add a USES_TYPE relationship from *source_id* to *target_id*."""
+    rel_id = f"uses_type:{source_id}->{target_id}"
+    graph.add_relationship(
+        GraphRelationship(
+            id=rel_id,
+            type=RelType.USES_TYPE,
+            source=source_id,
+            target=target_id,
+        )
+    )
+
+
+# ---------------------------------------------------------------------------
+# USES_TYPE tests
+# ---------------------------------------------------------------------------
+
+
+class TestSkipsTypeReferencedClasses:
+    """Classes with incoming USES_TYPE edges are not flagged as dead."""
+
+    def test_class_with_uses_type_not_dead(self) -> None:
+        g = KnowledgeGraph()
+        _add_file_node(g, "src/models.py")
+        _add_file_node(g, "src/handler.py")
+
+        class_id = _add_symbol_node(
+            g, NodeLabel.CLASS, "src/models.py", "Status"
+        )
+        func_id = _add_symbol_node(
+            g, NodeLabel.FUNCTION, "src/handler.py", "handle",
+            is_entry_point=True,
+        )
+        _add_uses_type_relationship(g, func_id, class_id)
+
+        process_dead_code(g)
+
+        node = g.get_node(class_id)
+        assert node is not None
+        assert node.is_dead is False
+
+    def test_function_with_only_uses_type_still_dead(self) -> None:
+        """Functions referenced only as types ARE dead (not classes)."""
+        g = KnowledgeGraph()
+        _add_file_node(g, "src/utils.py")
+        _add_file_node(g, "src/handler.py")
+
+        func_id = _add_symbol_node(
+            g, NodeLabel.FUNCTION, "src/utils.py", "unused_func"
+        )
+        other_id = _add_symbol_node(
+            g, NodeLabel.FUNCTION, "src/handler.py", "handle",
+            is_entry_point=True,
+        )
+        _add_uses_type_relationship(g, other_id, func_id)
+
+        process_dead_code(g)
+
+        node = g.get_node(func_id)
+        assert node is not None
+        assert node.is_dead is True
+
+
+# ---------------------------------------------------------------------------
+# Framework decorator tests
+# ---------------------------------------------------------------------------
+
+
+class TestSkipsFrameworkDecoratedFunctions:
+    """Functions with framework-registration decorators are not flagged dead."""
+
+    def test_framework_decorated_function_not_dead(self) -> None:
+        g = KnowledgeGraph()
+        _add_file_node(g, "src/server.py")
+        node_id = _add_symbol_node(
+            g, NodeLabel.FUNCTION, "src/server.py", "list_tools"
+        )
+        node = g.get_node(node_id)
+        assert node is not None
+        node.properties["decorators"] = ["server.list_tools"]
+
+        process_dead_code(g)
+
+        assert node.is_dead is False
+
+    def test_simple_decorator_still_dead(self) -> None:
+        """Decorators without dots (e.g., @staticmethod) do not exempt."""
+        g = KnowledgeGraph()
+        _add_file_node(g, "src/utils.py")
+        node_id = _add_symbol_node(
+            g, NodeLabel.FUNCTION, "src/utils.py", "unused"
+        )
+        node = g.get_node(node_id)
+        assert node is not None
+        node.properties["decorators"] = ["staticmethod"]
+
+        process_dead_code(g)
+
+        assert node.is_dead is True
+
+    def test_non_framework_dotted_decorator_still_dead(self) -> None:
+        """Known non-framework dotted decorators don't exempt."""
+        g = KnowledgeGraph()
+        _add_file_node(g, "src/utils.py")
+        node_id = _add_symbol_node(
+            g, NodeLabel.FUNCTION, "src/utils.py", "overloaded"
+        )
+        node = g.get_node(node_id)
+        assert node is not None
+        node.properties["decorators"] = ["typing.overload"]
+
+        process_dead_code(g)
+
+        assert node.is_dead is True
+
+
+# ---------------------------------------------------------------------------
+# Protocol conformance tests
+# ---------------------------------------------------------------------------
+
+
+class TestProtocolConformance:
+    """Methods on classes structurally conforming to a Protocol are not dead."""
+
+    def test_conforming_class_methods_not_dead(self) -> None:
+        g = KnowledgeGraph()
+        _add_file_node(g, "src/base.py")
+        _add_file_node(g, "src/impl.py")
+        _add_file_node(g, "src/main.py")
+
+        # Protocol class with is_protocol annotation
+        proto_id = _add_symbol_node(
+            g, NodeLabel.CLASS, "src/base.py", "StorageBackend"
+        )
+        proto_node = g.get_node(proto_id)
+        assert proto_node is not None
+        proto_node.properties["is_protocol"] = True
+
+        # Protocol methods
+        proto_init_id = _add_symbol_node(
+            g, NodeLabel.METHOD, "src/base.py", "initialize",
+            class_name="StorageBackend",
+        )
+        proto_close_id = _add_symbol_node(
+            g, NodeLabel.METHOD, "src/base.py", "close",
+            class_name="StorageBackend",
+        )
+
+        # Concrete class structurally conforming (has both methods)
+        _add_symbol_node(
+            g, NodeLabel.CLASS, "src/impl.py", "KuzuBackend"
+        )
+        impl_init_id = _add_symbol_node(
+            g, NodeLabel.METHOD, "src/impl.py", "initialize",
+            class_name="KuzuBackend",
+        )
+        impl_close_id = _add_symbol_node(
+            g, NodeLabel.METHOD, "src/impl.py", "close",
+            class_name="KuzuBackend",
+        )
+
+        # A caller calls StorageBackend.initialize (not KuzuBackend)
+        caller_id = _add_symbol_node(
+            g, NodeLabel.FUNCTION, "src/main.py", "main",
+            is_entry_point=True,
+        )
+        _add_calls_relationship(g, caller_id, proto_init_id)
+        _add_calls_relationship(g, caller_id, proto_close_id)
+
+        process_dead_code(g)
+
+        # Protocol methods are alive (have incoming CALLS)
+        assert g.get_node(proto_init_id).is_dead is False
+        assert g.get_node(proto_close_id).is_dead is False
+
+        # Concrete methods should be un-flagged by Protocol conformance
+        assert g.get_node(impl_init_id).is_dead is False
+        assert g.get_node(impl_close_id).is_dead is False
+
+    def test_non_conforming_class_still_dead(self) -> None:
+        """A class with only some protocol methods is still flagged dead."""
+        g = KnowledgeGraph()
+        _add_file_node(g, "src/base.py")
+        _add_file_node(g, "src/partial.py")
+
+        proto_id = _add_symbol_node(
+            g, NodeLabel.CLASS, "src/base.py", "Backend"
+        )
+        proto_node = g.get_node(proto_id)
+        assert proto_node is not None
+        proto_node.properties["is_protocol"] = True
+
+        _add_symbol_node(
+            g, NodeLabel.METHOD, "src/base.py", "initialize",
+            class_name="Backend",
+        )
+        _add_symbol_node(
+            g, NodeLabel.METHOD, "src/base.py", "close",
+            class_name="Backend",
+        )
+
+        # Partial class only has "initialize", not "close"
+        _add_symbol_node(
+            g, NodeLabel.CLASS, "src/partial.py", "Partial"
+        )
+        partial_method_id = _add_symbol_node(
+            g, NodeLabel.METHOD, "src/partial.py", "initialize",
+            class_name="Partial",
+        )
+
+        process_dead_code(g)
+
+        partial_method = g.get_node(partial_method_id)
+        assert partial_method is not None
+        assert partial_method.is_dead is True

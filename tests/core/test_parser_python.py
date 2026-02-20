@@ -355,3 +355,81 @@ class TestEdgeCases:
         assert len(methods) == 1
         assert methods[0].name == "create"
         assert methods[0].class_name == "Service"
+
+
+# ---------------------------------------------------------------------------
+# Decorators
+# ---------------------------------------------------------------------------
+
+
+class TestParseDecorators:
+    """Decorator names are captured on SymbolInfo."""
+
+    def test_simple_decorator(self, parser: PythonParser) -> None:
+        code = (
+            "@staticmethod\n"
+            "def create() -> None:\n"
+            "    pass\n"
+        )
+        result = parser.parse(code, "test.py")
+        assert len(result.symbols) == 1
+        assert result.symbols[0].decorators == ["staticmethod"]
+
+    def test_dotted_decorator(self, parser: PythonParser) -> None:
+        code = (
+            "@app.route\n"
+            "def index():\n"
+            "    pass\n"
+        )
+        result = parser.parse(code, "test.py")
+        assert result.symbols[0].decorators == ["app.route"]
+
+    def test_decorator_with_call(self, parser: PythonParser) -> None:
+        code = (
+            "@server.list_tools()\n"
+            "async def list_tools():\n"
+            "    return []\n"
+        )
+        result = parser.parse(code, "test.py")
+        assert result.symbols[0].decorators == ["server.list_tools"]
+
+    def test_multiple_decorators(self, parser: PythonParser) -> None:
+        code = (
+            "@staticmethod\n"
+            "@cache\n"
+            "def compute():\n"
+            "    pass\n"
+        )
+        result = parser.parse(code, "test.py")
+        assert result.symbols[0].decorators == ["staticmethod", "cache"]
+
+    def test_undecorated_function_has_empty_decorators(self, parser: PythonParser) -> None:
+        code = "def plain():\n    pass\n"
+        result = parser.parse(code, "test.py")
+        assert result.symbols[0].decorators == []
+
+    def test_decorated_method_in_class(self, parser: PythonParser) -> None:
+        code = (
+            "class Service:\n"
+            "    @staticmethod\n"
+            "    def create() -> None:\n"
+            "        pass\n"
+        )
+        result = parser.parse(code, "test.py")
+        methods = [s for s in result.symbols if s.kind == "method"]
+        assert len(methods) == 1
+        assert methods[0].decorators == ["staticmethod"]
+        # The class itself should NOT have the method's decorators.
+        classes = [s for s in result.symbols if s.kind == "class"]
+        assert classes[0].decorators == []
+
+    def test_decorated_class(self, parser: PythonParser) -> None:
+        code = (
+            "@dataclass\n"
+            "class Config:\n"
+            "    name: str\n"
+        )
+        result = parser.parse(code, "test.py")
+        classes = [s for s in result.symbols if s.kind == "class"]
+        assert len(classes) == 1
+        assert classes[0].decorators == ["dataclass"]

@@ -316,3 +316,67 @@ class TestProcessHeritageMultiple:
 
         for rel in all_rels:
             assert rel.source == user_id
+
+
+# ---------------------------------------------------------------------------
+# Protocol annotation tests
+# ---------------------------------------------------------------------------
+
+
+class TestProtocolAnnotation:
+    """Heritage with unresolvable Protocol parent annotates the child."""
+
+    def test_protocol_parent_annotates_child(self, graph: KnowledgeGraph) -> None:
+        parse_data = [
+            _make_parse_data(
+                "src/models.py",
+                [("Animal", "extends", "Protocol")],
+            ),
+        ]
+        process_heritage(parse_data, graph)
+
+        animal_id = generate_id(NodeLabel.CLASS, "src/models.py", "Animal")
+        animal = graph.get_node(animal_id)
+        assert animal is not None
+        assert animal.properties.get("is_protocol") is True
+
+    def test_abc_parent_annotates_child(self, graph: KnowledgeGraph) -> None:
+        parse_data = [
+            _make_parse_data(
+                "src/models.py",
+                [("Animal", "extends", "ABC")],
+            ),
+        ]
+        process_heritage(parse_data, graph)
+
+        animal_id = generate_id(NodeLabel.CLASS, "src/models.py", "Animal")
+        animal = graph.get_node(animal_id)
+        assert animal is not None
+        assert animal.properties.get("is_protocol") is True
+
+    def test_non_protocol_parent_not_annotated(self, graph: KnowledgeGraph) -> None:
+        parse_data = [
+            _make_parse_data(
+                "src/models.py",
+                [("Dog", "extends", "UnknownBase")],
+            ),
+        ]
+        process_heritage(parse_data, graph)
+
+        dog_id = generate_id(NodeLabel.CLASS, "src/models.py", "Dog")
+        dog = graph.get_node(dog_id)
+        assert dog is not None
+        assert dog.properties.get("is_protocol") is None
+
+    def test_protocol_annotation_does_not_create_edge(self, graph: KnowledgeGraph) -> None:
+        """Protocol annotation should NOT create an EXTENDS edge."""
+        parse_data = [
+            _make_parse_data(
+                "src/models.py",
+                [("Animal", "extends", "Protocol")],
+            ),
+        ]
+        process_heritage(parse_data, graph)
+
+        extends_rels = graph.get_relationships_by_type(RelType.EXTENDS)
+        assert len(extends_rels) == 0

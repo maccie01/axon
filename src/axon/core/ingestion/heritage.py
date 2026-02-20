@@ -29,6 +29,10 @@ _KIND_TO_REL: dict[str, RelType] = {
     "implements": RelType.IMPLEMENTS,
 }
 
+# Parent class names that indicate the child is a protocol/abstract interface.
+# These are typically unresolvable because they come from the standard library.
+_PROTOCOL_MARKERS: frozenset[str] = frozenset({"Protocol", "ABC", "ABCMeta"})
+
 
 # ---------------------------------------------------------------------------
 # Symbol index
@@ -132,14 +136,38 @@ def process_heritage(
                 parent_name, fpd.file_path, symbol_index, graph
             )
 
-            if child_id is None or parent_id is None:
+            if child_id is None:
                 logger.debug(
-                    "Skipping heritage %s %s %s in %s: unresolved node(s)",
+                    "Skipping heritage %s %s %s in %s: unresolved child",
                     class_name,
                     kind,
                     parent_name,
                     fpd.file_path,
                 )
+                continue
+
+            if parent_id is None:
+                # Parent is external.  If it is a protocol/ABC marker,
+                # annotate the child so dead-code detection can leverage
+                # structural subtyping later.
+                if parent_name in _PROTOCOL_MARKERS:
+                    child_node = graph.get_node(child_id)
+                    if child_node is not None:
+                        child_node.properties["is_protocol"] = True
+                        logger.debug(
+                            "Annotated %s as protocol in %s (parent: %s)",
+                            class_name,
+                            fpd.file_path,
+                            parent_name,
+                        )
+                else:
+                    logger.debug(
+                        "Skipping heritage %s %s %s in %s: unresolved parent",
+                        class_name,
+                        kind,
+                        parent_name,
+                        fpd.file_path,
+                    )
                 continue
 
             rel_id = f"{kind}:{child_id}->{parent_id}"

@@ -11,7 +11,7 @@ from __future__ import annotations
 import logging
 
 from axon.core.graph.graph import KnowledgeGraph
-from axon.core.graph.model import NodeLabel, RelType
+from axon.core.graph.model import GraphNode, NodeLabel, RelType
 
 logger = logging.getLogger(__name__)
 
@@ -71,6 +71,42 @@ def _is_dunder(name: str) -> bool:
 def _has_incoming_calls(graph: KnowledgeGraph, node_id: str) -> bool:
     """Return ``True`` if *node_id* has at least one incoming CALLS edge."""
     return graph.has_incoming(node_id, RelType.CALLS)
+
+
+def _is_type_referenced(graph: KnowledgeGraph, node_id: str, label: NodeLabel) -> bool:
+    """Return ``True`` if *node_id* is a class with incoming USES_TYPE edges.
+
+    Classes referenced via type annotations (enums, dataclasses, Protocol
+    classes) are not dead — they are actively used as types.  This check
+    is restricted to CLASS nodes; a function used only in a type annotation
+    is legitimately unused.
+    """
+    if label != NodeLabel.CLASS:
+        return False
+    return graph.has_incoming(node_id, RelType.USES_TYPE)
+
+
+def _has_framework_decorator(node: GraphNode) -> bool:
+    """Return ``True`` if *node* has a decorator indicating framework registration.
+
+    Decorators like ``server.list_tools``, ``app.route``, ``router.get``
+    are method calls on framework objects — the decorated function is
+    called at runtime by the framework even though no explicit CALLS edge
+    exists in the codebase.
+
+    We exclude known non-framework dotted decorators (e.g. ``typing.overload``,
+    ``functools.wraps``) that do NOT imply the function is called externally.
+    """
+    _NON_FRAMEWORK = frozenset({
+        "typing.overload",
+        "functools.wraps",
+        "functools.lru_cache",
+        "functools.cached_property",
+        "functools.cache",
+        "abc.abstractmethod",
+    })
+    decorators: list[str] = node.properties.get("decorators", [])
+    return any("." in dec and dec not in _NON_FRAMEWORK for dec in decorators)
 
 
 def _is_python_public_api(name: str, file_path: str) -> bool:
@@ -158,6 +194,76 @@ def _clear_override_false_positives(graph: KnowledgeGraph) -> int:
     return cleared
 
 
+def _clear_protocol_conformance_false_positives(graph: KnowledgeGraph) -> int:
+    """Un-flag methods on classes that structurally conform to a Protocol.
+
+    When a Protocol defines methods ``{m1, m2, m3}`` and a concrete class
+    implements all of those methods without an explicit EXTENDS edge
+    (structural subtyping), the concrete methods may be flagged dead
+    because CALLS edges resolve to the Protocol's stubs, not the
+    concrete implementations.
+
+    This pass:
+
+    1. Finds Protocol classes (annotated with ``is_protocol`` in properties).
+    2. Collects their non-dunder method names as the required interface.
+    3. Finds non-Protocol classes whose methods are a superset.
+    4. Un-flags dead methods whose name is in the protocol interface.
+
+    Returns the number of methods un-flagged.
+    """
+    # Step 1: Collect protocol interfaces.
+    protocol_methods: dict[str, set[str]] = {}
+    for cls_node in graph.get_nodes_by_label(NodeLabel.CLASS):
+        if not cls_node.properties.get("is_protocol"):
+            continue
+        methods = set()
+        for method in graph.get_nodes_by_label(NodeLabel.METHOD):
+            if method.class_name == cls_node.name and not _is_dunder(method.name):
+                methods.add(method.name)
+        if methods:
+            protocol_methods[cls_node.name] = methods
+
+    if not protocol_methods:
+        return 0
+
+    # Step 2: Build class_name -> set of method names for all classes.
+    class_methods: dict[str, set[str]] = {}
+    for method in graph.get_nodes_by_label(NodeLabel.METHOD):
+        if method.class_name:
+            class_methods.setdefault(method.class_name, set()).add(method.name)
+
+    # Step 3: Find conforming classes and collect clearable method names.
+    # Maps class_name -> set of protocol method names that should be cleared.
+    clearable: dict[str, set[str]] = {}
+    for proto_name, required in protocol_methods.items():
+        for cls_name, methods in class_methods.items():
+            if cls_name == proto_name:
+                continue
+            if required <= methods:  # structural conformance
+                clearable.setdefault(cls_name, set()).update(required)
+
+    if not clearable:
+        return 0
+
+    # Step 4: Un-flag dead methods on conforming classes.
+    cleared = 0
+    for method in graph.get_nodes_by_label(NodeLabel.METHOD):
+        if not method.is_dead or not method.class_name:
+            continue
+        names_to_clear = clearable.get(method.class_name)
+        if names_to_clear and method.name in names_to_clear:
+            method.is_dead = False
+            cleared += 1
+            logger.debug(
+                "Un-flagged protocol conformance: %s.%s",
+                method.class_name,
+                method.name,
+            )
+
+    return cleared
+
+
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
@@ -200,6 +306,14 @@ def process_dead_code(graph: KnowledgeGraph) -> int:
             if _has_incoming_calls(graph, node.id):
                 continue
 
+            # Skip classes that are referenced via type annotations.
+            if _is_type_referenced(graph, node.id, label):
+                continue
+
+            # Skip symbols with framework-registration decorators.
+            if _has_framework_decorator(node):
+                continue
+
             # Flag the symbol as dead.
             node.is_dead = True
             dead_count += 1
@@ -208,5 +322,9 @@ def process_dead_code(graph: KnowledgeGraph) -> int:
     # Second pass: un-flag overrides of called base-class methods.
     cleared = _clear_override_false_positives(graph)
     dead_count -= cleared
+
+    # Third pass: un-flag methods on classes that structurally conform to a Protocol.
+    protocol_cleared = _clear_protocol_conformance_false_positives(graph)
+    dead_count -= protocol_cleared
 
     return dead_count

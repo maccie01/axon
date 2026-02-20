@@ -11,6 +11,7 @@ from __future__ import annotations
 import logging
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
+from typing import Any
 
 from axon.core.graph.graph import KnowledgeGraph
 from axon.core.graph.model import (
@@ -184,6 +185,10 @@ def process_parsing(
 
             symbol_id = generate_id(label, file_entry.path, symbol_name)
 
+            props: dict[str, Any] = {}
+            if symbol.decorators:
+                props["decorators"] = symbol.decorators
+
             graph.add_node(
                 GraphNode(
                     id=symbol_id,
@@ -196,6 +201,7 @@ def process_parsing(
                     signature=symbol.signature,
                     class_name=symbol.class_name,
                     language=file_entry.language,
+                    properties=props,
                 )
             )
 

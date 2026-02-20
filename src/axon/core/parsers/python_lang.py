@@ -85,6 +85,8 @@ class PythonParser(LanguageParser):
                     self._extract_import(child, result)
                 case "import_from_statement":
                     self._extract_import_from(child, result)
+                case "decorated_definition":
+                    self._extract_decorated(child, content, result, class_name)
                 case "expression_statement":
                     # Only extract variable annotations here; calls are
                     # handled by the scope-level _extract_calls_recursive.
@@ -169,6 +171,72 @@ class PythonParser(LanguageParser):
             sig += f" -> {return_type.text.decode('utf8')}"
 
         return sig
+
+    # ------------------------------------------------------------------
+    # Decorated definitions
+    # ------------------------------------------------------------------
+
+    def _extract_decorated(
+        self,
+        node: Node,
+        content: str,
+        result: ParseResult,
+        class_name: str,
+    ) -> None:
+        """Extract a decorated function or class, capturing decorator names.
+
+        Tree-sitter wraps decorated definitions in a ``decorated_definition``
+        node whose children are one or more ``decorator`` nodes followed by
+        the actual ``function_definition`` or ``class_definition``.
+        """
+        decorators: list[str] = []
+        definition_node: Node | None = None
+
+        for child in node.children:
+            if child.type == "decorator":
+                dec_name = self._extract_decorator_name(child)
+                if dec_name:
+                    decorators.append(dec_name)
+            elif child.type in ("function_definition", "class_definition"):
+                definition_node = child
+
+        if definition_node is None:
+            return
+
+        count_before = len(result.symbols)
+
+        if definition_node.type == "function_definition":
+            self._extract_function(definition_node, content, result, class_name)
+        else:
+            self._extract_class(definition_node, content, result)
+
+        # Attach decorators to the primary symbol (first added).
+        if count_before < len(result.symbols):
+            result.symbols[count_before].decorators = decorators
+
+    def _extract_decorator_name(self, decorator_node: Node) -> str:
+        """Extract the dotted name from a decorator node.
+
+        Handles three forms::
+
+            @staticmethod          -> "staticmethod"
+            @app.route             -> "app.route"
+            @server.list_tools()   -> "server.list_tools"
+        """
+        for child in decorator_node.children:
+            if child.type == "identifier":
+                return child.text.decode("utf8")
+            if child.type == "attribute":
+                return child.text.decode("utf8")
+            if child.type == "call":
+                func = child.child_by_field_name("function")
+                if func is not None:
+                    return func.text.decode("utf8")
+        return ""
+
+    # ------------------------------------------------------------------
+    # Parameter types
+    # ------------------------------------------------------------------
 
     def _extract_param_types(self, func_node: Node, result: ParseResult) -> None:
         """Extract type annotations from function parameters."""

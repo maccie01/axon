@@ -124,9 +124,11 @@ class TestHandleListRepos:
         meta = {
             "name": "my-project",
             "path": "/home/user/my-project",
-            "node_count": 150,
-            "edge_count": 200,
-            "file_count": 25,
+            "stats": {
+                "files": 25,
+                "symbols": 150,
+                "relationships": 200,
+            },
         }
         (repo_dir / "meta.json").write_text(json.dumps(meta))
 
@@ -185,6 +187,7 @@ class TestHandleContext:
 
     def test_not_found_fts_empty(self, mock_storage):
         """Returns not-found message when FTS returns nothing."""
+        mock_storage.exact_name_search.return_value = []
         mock_storage.fts_search.return_value = []
         result = handle_context(mock_storage, "nonexistent")
         assert "not found" in result.lower()
@@ -260,6 +263,7 @@ class TestHandleImpact:
 
     def test_symbol_not_found(self, mock_storage):
         """Returns not-found when symbol does not exist."""
+        mock_storage.exact_name_search.return_value = []
         mock_storage.fts_search.return_value = []
         result = handle_impact(mock_storage, "nonexistent")
         assert "not found" in result.lower()

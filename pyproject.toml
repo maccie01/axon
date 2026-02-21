@@ -1,10 +1,23 @@
 [project]
-name = "axon"
+name = "axoniq"
 version = "0.1.0"
 description = "Graph-powered code intelligence engine — indexes codebases into a knowledge graph, exposed via MCP tools for AI agents and a CLI for developers."
 readme = "README.md"
+license = "MIT"
 authors = [
     { name = "harshkedia177", email = "harshkedia717@gmail.com" }
+]
+keywords = ["code-intelligence", "knowledge-graph", "mcp", "tree-sitter", "static-analysis", "dead-code", "claude-code"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Quality Assurance",
+    "Topic :: Software Development :: Code Generators",
 ]
 requires-python = ">=3.11"
 dependencies = [
@@ -23,6 +36,11 @@ dependencies = [
     "pathspec>=1.0.4",
 ]
 
+[project.urls]
+Homepage = "https://github.com/harshkedia177/axon"
+Repository = "https://github.com/harshkedia177/axon"
+Issues = "https://github.com/harshkedia177/axon/issues"
+
 [project.optional-dependencies]
 neo4j = ["neo4j>=5.0.0"]
 dev = [
@@ -34,6 +52,10 @@ dev = [
 
 [project.scripts]
 axon = "axon.cli.main:app"
+
+[tool.uv.build-backend]
+module-name = "axon"
+
 
 [build-system]
 requires = ["uv_build>=0.9.21,<0.10.0"]

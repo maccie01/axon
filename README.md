@@ -157,13 +157,13 @@ Symbols removed (1):
 
 ```bash
 # With pip
-pip install axon
+pip install axoniq
 
 # With uv (recommended)
-uv add axon
+uv add axoniq
 
 # With Neo4j backend support
-pip install axon[neo4j]
+pip install axoniq[neo4j]
 ```
 
 Requires **Python 3.11+**.
@@ -442,7 +442,7 @@ your-project/
 
 Add `.axon/` to your `.gitignore`.
 
-The storage layer is abstracted behind a `StorageBackend` Protocol — KuzuDB is the default, with an optional Neo4j backend available via `pip install axon[neo4j]`.
+The storage layer is abstracted behind a `StorageBackend` Protocol — KuzuDB is the default, with an optional Neo4j backend available via `pip install axoniq[neo4j]`.
 
 ---
 

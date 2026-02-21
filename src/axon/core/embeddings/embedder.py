@@ -12,17 +12,21 @@ richness that makes embedding worthwhile.
 from __future__ import annotations
 
 from functools import lru_cache
-
-from fastembed import TextEmbedding
+from typing import TYPE_CHECKING
 
 from axon.core.embeddings.text import build_class_method_index, generate_text
 from axon.core.graph.graph import KnowledgeGraph
 from axon.core.graph.model import NodeLabel
 from axon.core.storage.base import NodeEmbedding
 
+if TYPE_CHECKING:
+    from fastembed import TextEmbedding
+
 
 @lru_cache(maxsize=4)
 def _get_model(model_name: str) -> TextEmbedding:
+    from fastembed import TextEmbedding
+
     return TextEmbedding(model_name=model_name)
 
 # Labels worth embedding — skip Folder, Community, Process (structural only).

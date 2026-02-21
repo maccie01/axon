@@ -14,7 +14,8 @@ jobs:
         with:
           python-version: "3.11"
       - run: uv sync --extra dev
-      - run: uv run pytest
+      - run: uv run pytest -x -q
+        timeout-minutes: 10
 
   publish:
     needs: test

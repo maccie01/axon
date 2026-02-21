@@ -151,6 +151,12 @@ def process_parsing(
         file_id = generate_id(NodeLabel.FILE, file_entry.path)
         exported_names: set[str] = set(parse_data.parse_result.exports)
 
+        # Build class -> base class names for storing on class nodes.
+        class_bases: dict[str, list[str]] = {}
+        for cls_name, kind, parent_name in parse_data.parse_result.heritage:
+            if kind == "extends":
+                class_bases.setdefault(cls_name, []).append(parent_name)
+
         for symbol in parse_data.parse_result.symbols:
             label = _KIND_TO_LABEL.get(symbol.kind)
             if label is None:
@@ -175,6 +181,8 @@ def process_parsing(
             props: dict[str, Any] = {}
             if symbol.decorators:
                 props["decorators"] = symbol.decorators
+            if symbol.kind == "class" and symbol.name in class_bases:
+                props["bases"] = class_bases[symbol.name]
 
             # Mark as exported if listed in __all__ or parser-detected exports.
             is_exported = symbol.name in exported_names

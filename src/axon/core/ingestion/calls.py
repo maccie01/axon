@@ -7,6 +7,7 @@ Resolution priority:
 1. Same-file exact match (confidence 1.0)
 2. Import-resolved match (confidence 1.0)
 3. Global fuzzy match (confidence 0.5)
+4. Receiver method resolution (confidence 0.8)
 """
 
 from __future__ import annotations
@@ -191,6 +192,9 @@ def _resolve_receiver_method(
     ``class_name`` matches *receiver*.  Searches same-file first, then
     globally.
     """
+    same_file_match: str | None = None
+    global_match: str | None = None
+
     for nid in call_index.get(method_name, []):
         node = graph.get_node(nid)
         if (
@@ -198,19 +202,28 @@ def _resolve_receiver_method(
             and node.label == NodeLabel.METHOD
             and node.class_name == receiver
         ):
-            rel_id = f"calls:{source_id}->{nid}"
-            if rel_id not in seen:
-                seen.add(rel_id)
-                graph.add_relationship(
-                    GraphRelationship(
-                        id=rel_id,
-                        type=RelType.CALLS,
-                        source=source_id,
-                        target=nid,
-                        properties={"confidence": 0.8},
-                    )
-                )
-            return
+            if node.file_path == file_path:
+                same_file_match = nid
+                break  # Best possible match
+            elif global_match is None:
+                global_match = nid
+
+    target = same_file_match or global_match
+    if target is None:
+        return
+
+    rel_id = f"calls:{source_id}->{target}"
+    if rel_id not in seen:
+        seen.add(rel_id)
+        graph.add_relationship(
+            GraphRelationship(
+                id=rel_id,
+                type=RelType.CALLS,
+                source=source_id,
+                target=target,
+                properties={"confidence": 0.8},
+            )
+        )
 
 
 def process_calls(
@@ -257,11 +270,7 @@ def process_calls(
             target_id, confidence = resolve_call(
                 call, fpd.file_path, call_index, graph
             )
-            if target_id is None:
-                # Even if the call target can't be resolved, still process
-                # identifier arguments (callbacks) below.
-                pass
-            else:
+            if target_id is not None:
                 rel_id = f"calls:{source_id}->{target_id}"
                 if rel_id not in seen:
                     seen.add(rel_id)
@@ -296,12 +305,8 @@ def process_calls(
                             )
                         )
 
-            if target_id is None:
-                continue
-
-            # When the call has a receiver (e.g. ClassName.method()), also
-            # create a CALLS edge to the receiver class so it isn't flagged
-            # as dead code.
+            # Receiver handling: link to the receiver class and resolve
+            # the method on it (e.g. ClassName.method()).
             receiver = call.receiver
             if receiver and receiver not in ("self", "this"):
                 receiver_call = CallInfo(name=receiver, line=call.line)
@@ -322,13 +327,13 @@ def process_calls(
                             )
                         )
 
-                    # Also resolve the method on the receiver class.
-                    # e.g. MathUtils.compute() → find METHOD node with
-                    # name="compute" and class_name="MathUtils".
-                    _resolve_receiver_method(
-                        receiver, call.name, source_id, fpd.file_path,
-                        call_index, graph, seen,
-                    )
+                # Also resolve the method on the receiver class.
+                # e.g. MathUtils.compute() → find METHOD node with
+                # name="compute" and class_name="MathUtils".
+                _resolve_receiver_method(
+                    receiver, call.name, source_id, fpd.file_path,
+                    call_index, graph, seen,
+                )
 
         # Decorators are implicit calls — @cost_decorator on a function is
         # equivalent to calling cost_decorator(func).  Create CALLS edges

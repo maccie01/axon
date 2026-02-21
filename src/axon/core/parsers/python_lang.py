@@ -373,23 +373,26 @@ class PythonParser(LanguageParser):
 
     @staticmethod
     def _try_extract_all_exports(assignment_node: Node, result: ParseResult) -> None:
-        """Extract names from ``__all__ = [...]`` assignments."""
+        """Extract names from ``__all__ = [...]`` or ``__all__ = (...)`` assignments."""
         left = assignment_node.child_by_field_name("left")
         right = assignment_node.child_by_field_name("right")
         if left is None or right is None:
             return
         if left.type != "identifier" or left.text.decode("utf8") != "__all__":
             return
-        if right.type != "list":
+        if right.type not in ("list", "tuple"):
             return
 
         for child in right.children:
             if child.type == "string":
-                # Extract the string content (strip quotes).
                 text = child.text.decode("utf8")
-                # Remove surrounding quotes.
-                if len(text) >= 2 and text[0] in ('"', "'") and text[-1] in ('"', "'"):
-                    result.exports.append(text[1:-1])
+                # Strip surrounding quotes (single, double, or triple).
+                for quote in ('"""', "'''", '"', "'"):
+                    if text.startswith(quote) and text.endswith(quote):
+                        text = text[len(quote):-len(quote)]
+                        break
+                if text:
+                    result.exports.append(text)
 
     def _extract_calls_recursive(self, node: Node, result: ParseResult) -> None:
         """Recursively find and extract all call nodes and exception references."""
@@ -409,17 +412,39 @@ class PythonParser(LanguageParser):
                             line=child.start_point[0] + 1,
                         )
                     )
+                elif child.type == "tuple":
+                    # except (ErrorA, ErrorB): — extract each exception type.
+                    for elem in child.children:
+                        if elem.type == "identifier":
+                            result.calls.append(
+                                CallInfo(
+                                    name=elem.text.decode("utf8"),
+                                    line=elem.start_point[0] + 1,
+                                )
+                            )
                 elif child.type == "as_pattern":
-                    # except (ErrorA, ErrorB) as e — extract from tuple.
+                    # except ErrorA as e  OR  except (ErrorA, ErrorB) as e
                     for sub in child.children:
                         if sub.type == "identifier":
+                            # Simple case: first identifier is the exception type.
                             result.calls.append(
                                 CallInfo(
                                     name=sub.text.decode("utf8"),
                                     line=sub.start_point[0] + 1,
                                 )
                             )
-                            break  # first identifier is the exception type
+                            break
+                        if sub.type == "tuple":
+                            # Tuple case: extract each exception type from tuple.
+                            for elem in sub.children:
+                                if elem.type == "identifier":
+                                    result.calls.append(
+                                        CallInfo(
+                                            name=elem.text.decode("utf8"),
+                                            line=elem.start_point[0] + 1,
+                                        )
+                                    )
+                            break
 
         # raise SomeError (without parens) — reference to the exception class.
         if node.type == "raise_statement":

@@ -110,12 +110,8 @@ def _is_enum_class(node: GraphNode, label: NodeLabel) -> bool:
     """Return ``True`` if *node* is an enum class (members accessed via dot, not called)."""
     if label != NodeLabel.CLASS:
         return False
-    content = node.content or ""
-    # Check for common enum base classes in the class signature.
-    for base in _ENUM_BASES:
-        if f"({base})" in content or f"({base}," in content or f", {base})" in content:
-            return True
-    return False
+    bases: list[str] = node.properties.get("bases", [])
+    return bool(_ENUM_BASES & set(bases))
 
 def _is_python_public_api(name: str, file_path: str) -> bool:
     """Return ``True`` if *name* is a public symbol in an ``__init__.py`` file."""
@@ -292,9 +288,20 @@ def process_dead_code(graph: KnowledgeGraph) -> int:
     6. It is not a test class (name starts with ``Test``).
     7. It is not in a test file (fixtures/helpers are exempt).
     8. It is not a dunder method (name starts and ends with ``__``).
+    9. It is not a class referenced via type annotations (``USES_TYPE``).
+    10. It does not have a framework-registration decorator.
+    11. It is not a ``@property`` method.
+    12. It is not an ``@overload`` or ``@abstractmethod`` stub.
+    13. It is not an enum class (extends ``Enum``, ``IntEnum``, etc.).
 
-    After the initial pass, a second pass un-flags method overrides whose
-    base class method is called (resolves dynamic dispatch false positives).
+    After the initial pass, three additional passes reduce false positives:
+
+    - **Override pass**: un-flags method overrides whose base class method
+      is called (resolves dynamic dispatch false positives).
+    - **Protocol conformance pass**: un-flags methods on classes that
+      structurally conform to a Protocol interface.
+    - **Protocol stub pass**: un-flags methods on Protocol classes
+      themselves (stubs are never called directly).
 
     For each dead symbol the function sets ``node.is_dead = True``.
 

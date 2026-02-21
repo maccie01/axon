@@ -298,7 +298,7 @@ class TestTraverse:
         backend.bulk_load(graph)
 
         caller_id = generate_id(NodeLabel.FUNCTION, "src/a.py", "caller")
-        nodes = backend.traverse(caller_id, depth=1)
+        nodes = backend.traverse(caller_id, depth=1, direction="callees")
 
         assert len(nodes) == 1
         assert nodes[0].name == "callee"
@@ -308,7 +308,7 @@ class TestTraverse:
         backend.bulk_load(graph)
 
         caller_id = generate_id(NodeLabel.FUNCTION, "src/a.py", "caller")
-        nodes = backend.traverse(caller_id, depth=0)
+        nodes = backend.traverse(caller_id, depth=0, direction="callees")
         assert nodes == []
 
 

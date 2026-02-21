@@ -30,7 +30,7 @@ class TestVersion:
 
     def test_version_string_format(self) -> None:
         result = runner.invoke(app, ["--version"])
-        assert "Axon v0.1.0" in result.output
+        assert f"Axon v{__version__}" in result.output
 
 
 class TestHelp:
@@ -364,15 +364,17 @@ class TestServe:
             mock_run.assert_called_once()
 
 
-class TestStillStubbed:
-    """Tests that watch and diff are still stubs."""
+class TestWatch:
+    """Tests for the watch command."""
 
-    def test_watch(self) -> None:
-        result = runner.invoke(app, ["watch"])
+    def test_watch_command_exists(self) -> None:
+        """The watch command should be registered."""
+        result = runner.invoke(app, ["watch", "--help"])
         assert result.exit_code == 0
-        assert "Not implemented yet." in result.output
+        assert "Watch mode" in result.output or "re-index" in result.output.lower()
 
-    def test_diff(self) -> None:
-        result = runner.invoke(app, ["diff", "main..feature"])
+    def test_diff_command_exists(self) -> None:
+        """The diff command should be registered."""
+        result = runner.invoke(app, ["diff", "--help"])
         assert result.exit_code == 0
-        assert "Not implemented yet." in result.output
+        assert "branch" in result.output.lower()

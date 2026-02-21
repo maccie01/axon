@@ -21,24 +21,16 @@ from axon.core.graph.model import (
 
 logger = logging.getLogger(__name__)
 
-# Labels that can serve as entry points or flow steps.
 _CALLABLE_LABELS: tuple[NodeLabel, ...] = (
     NodeLabel.FUNCTION,
     NodeLabel.METHOD,
 )
 
-# Python decorator patterns that indicate framework entry points.
 _PYTHON_DECORATOR_PATTERNS: tuple[str, ...] = (
     "@app.route",
     "@router",
     "@click.command",
 )
-
-
-# ---------------------------------------------------------------------------
-# Entry point detection
-# ---------------------------------------------------------------------------
-
 
 def find_entry_points(graph: KnowledgeGraph) -> list[GraphNode]:
     """Find functions/methods that serve as execution entry points.
@@ -71,7 +63,6 @@ def find_entry_points(graph: KnowledgeGraph) -> list[GraphNode]:
 
     return entry_points
 
-
 def _is_entry_point(node: GraphNode, graph: KnowledgeGraph) -> bool:
     """Determine whether *node* qualifies as an entry point.
 
@@ -79,25 +70,19 @@ def _is_entry_point(node: GraphNode, graph: KnowledgeGraph) -> bool:
     we require additional evidence (name heuristics, exported status) to avoid
     marking every utility function as an entry point in large codebases.
     """
-    # Framework pattern recognition takes priority.
     if _matches_framework_pattern(node):
         return True
 
-    # Functions with incoming calls are never entry points here.
     incoming_calls = graph.get_incoming(node.id, RelType.CALLS)
     if incoming_calls:
         return False
 
-    # For functions with NO incoming calls, require additional evidence.
-    # Exported symbols are entry points (externally reachable).
     if node.is_exported:
         return True
 
-    # Named "main" or similar well-known entry point names.
     if node.name in ("main", "cli", "run", "app", "handler", "entrypoint"):
         return True
 
-    # Top-level functions in script-like files (not methods).
     if node.label == NodeLabel.FUNCTION and node.file_path.endswith(
         ("__main__.py", "cli.py", "main.py", "app.py")
     ):
@@ -105,14 +90,12 @@ def _is_entry_point(node: GraphNode, graph: KnowledgeGraph) -> bool:
 
     return False
 
-
 def _matches_framework_pattern(node: GraphNode) -> bool:
     """Check whether *node* matches a known framework entry point pattern."""
     name = node.name
     language = node.language.lower() if node.language else ""
     content = node.content or ""
 
-    # Python patterns.
     if language in ("python", "py", "") or node.file_path.endswith(".py"):
         if name.startswith("test_"):
             return True
@@ -122,7 +105,6 @@ def _matches_framework_pattern(node: GraphNode) -> bool:
             if pattern in content:
                 return True
 
-    # TypeScript patterns.
     if language in ("typescript", "ts", "") or node.file_path.endswith(
         (".ts", ".tsx")
     ):
@@ -132,12 +114,6 @@ def _matches_framework_pattern(node: GraphNode) -> bool:
             return True
 
     return False
-
-
-# ---------------------------------------------------------------------------
-# Flow tracing
-# ---------------------------------------------------------------------------
-
 
 def trace_flow(
     entry_point: GraphNode,
@@ -163,7 +139,6 @@ def trace_flow(
     visited: set[str] = {entry_point.id}
     result: list[GraphNode] = [entry_point]
 
-    # BFS queue stores (node_id, current_depth).
     queue: deque[tuple[str, int]] = deque([(entry_point.id, 0)])
 
     while queue:
@@ -172,7 +147,6 @@ def trace_flow(
         if depth >= max_depth:
             continue
 
-        # Get outgoing CALLS edges, sorted by confidence (descending).
         outgoing = graph.get_outgoing(current_id, RelType.CALLS)
         outgoing.sort(
             key=lambda r: r.properties.get("confidence", 0.0), reverse=True
@@ -196,12 +170,6 @@ def trace_flow(
 
     return result
 
-
-# ---------------------------------------------------------------------------
-# Label generation
-# ---------------------------------------------------------------------------
-
-
 def generate_process_label(steps: list[GraphNode]) -> str:
     """Create a human-readable label from the flow steps.
 
@@ -223,12 +191,6 @@ def generate_process_label(steps: list[GraphNode]) -> str:
     names = [s.name for s in steps[:4]]
     return " \u2192 ".join(names)
 
-
-# ---------------------------------------------------------------------------
-# Deduplication
-# ---------------------------------------------------------------------------
-
-
 def deduplicate_flows(flows: list[list[GraphNode]]) -> list[list[GraphNode]]:
     """Remove flows that are too similar to longer ones.
 
@@ -241,7 +203,6 @@ def deduplicate_flows(flows: list[list[GraphNode]]) -> list[list[GraphNode]]:
     Returns:
         Deduplicated list of flows.
     """
-    # Sort by length descending so longer flows are checked first.
     indexed: list[tuple[int, list[GraphNode]]] = list(enumerate(flows))
     indexed.sort(key=lambda x: len(x[1]), reverse=True)
 
@@ -253,7 +214,6 @@ def deduplicate_flows(flows: list[list[GraphNode]]) -> list[list[GraphNode]]:
         is_duplicate = False
 
         for kept_set in kept_sets:
-            # Overlap relative to the smaller set.
             if not flow_ids or not kept_set:
                 continue
             intersection = flow_ids & kept_set
@@ -268,12 +228,6 @@ def deduplicate_flows(flows: list[list[GraphNode]]) -> list[list[GraphNode]]:
             kept_sets.append(flow_ids)
 
     return kept
-
-
-# ---------------------------------------------------------------------------
-# Community kind detection
-# ---------------------------------------------------------------------------
-
 
 def _determine_kind(steps: list[GraphNode], graph: KnowledgeGraph) -> str:
     """Determine whether a flow is intra- or cross-community.
@@ -297,12 +251,6 @@ def _determine_kind(steps: list[GraphNode], graph: KnowledgeGraph) -> str:
         return "intra_community"
     return "cross_community"
 
-
-# ---------------------------------------------------------------------------
-# Public API
-# ---------------------------------------------------------------------------
-
-
 def process_processes(graph: KnowledgeGraph) -> int:
     """Detect execution flows and create Process nodes in the graph.
 
@@ -322,19 +270,14 @@ def process_processes(graph: KnowledgeGraph) -> int:
     entry_points = find_entry_points(graph)
     logger.debug("Found %d entry points", len(entry_points))
 
-    # Trace flows.
     flows: list[list[GraphNode]] = []
     for ep in entry_points:
         flow = trace_flow(ep, graph)
         flows.append(flow)
 
-    # Deduplicate.
     flows = deduplicate_flows(flows)
-
-    # Filter trivial (single-step) flows.
     flows = [f for f in flows if len(f) > 1]
 
-    # Create Process nodes and STEP_IN_PROCESS relationships.
     count = 0
     for i, steps in enumerate(flows):
         process_id = generate_id(NodeLabel.PROCESS, f"process_{i}")

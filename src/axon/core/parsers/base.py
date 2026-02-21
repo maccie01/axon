@@ -8,7 +8,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-
 @dataclass
 class SymbolInfo:
     """A parsed symbol (function, class, method, etc.)."""
@@ -22,7 +21,6 @@ class SymbolInfo:
     class_name: str = ""  # for methods: the owning class
     decorators: list[str] = field(default_factory=list)  # e.g. ["staticmethod", "server.list_tools"]
 
-
 @dataclass
 class ImportInfo:
     """A parsed import statement."""
@@ -32,7 +30,6 @@ class ImportInfo:
     is_relative: bool = False
     alias: str = ""
 
-
 @dataclass
 class CallInfo:
     """A parsed function call."""
@@ -40,7 +37,6 @@ class CallInfo:
     name: str  # the called function/method name
     line: int
     receiver: str = ""  # for method calls: the object (e.g., "self", "user")
-
 
 @dataclass
 class TypeRef:
@@ -50,7 +46,6 @@ class TypeRef:
     kind: str  # "param", "return", "variable"
     line: int
     param_name: str = ""  # for param types: the parameter name
-
 
 @dataclass
 class ParseResult:
@@ -63,7 +58,6 @@ class ParseResult:
     heritage: list[tuple[str, str, str]] = field(
         default_factory=list
     )  # (class_name, kind, parent_name) where kind is "extends" or "implements"
-
 
 class LanguageParser:
     """Base interface for language-specific parsers."""

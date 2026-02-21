@@ -26,10 +26,6 @@ from axon.core.parsers.base import LanguageParser, ParseResult
 
 logger = logging.getLogger(__name__)
 
-# ---------------------------------------------------------------------------
-# Data structures
-# ---------------------------------------------------------------------------
-
 _KIND_TO_LABEL: dict[str, NodeLabel] = {
     "function": NodeLabel.FUNCTION,
     "class": NodeLabel.CLASS,
@@ -39,7 +35,6 @@ _KIND_TO_LABEL: dict[str, NodeLabel] = {
     "enum": NodeLabel.ENUM,
 }
 
-
 @dataclass
 class FileParseData:
     """Parse results for a single file, kept for later phases."""
@@ -48,14 +43,7 @@ class FileParseData:
     language: str
     parse_result: ParseResult
 
-
-# ---------------------------------------------------------------------------
-# Public API
-# ---------------------------------------------------------------------------
-
-
 _PARSER_CACHE: dict[str, LanguageParser] = {}
-
 
 def get_parser(language: str) -> LanguageParser:
     """Return the appropriate tree-sitter parser for *language*.
@@ -100,7 +88,6 @@ def get_parser(language: str) -> LanguageParser:
     _PARSER_CACHE[language] = parser
     return parser
 
-
 def parse_file(file_path: str, content: str, language: str) -> FileParseData:
     """Parse a single file and return structured parse data.
 
@@ -124,7 +111,6 @@ def parse_file(file_path: str, content: str, language: str) -> FileParseData:
         result = ParseResult()
 
     return FileParseData(file_path=file_path, language=language, parse_result=result)
-
 
 def process_parsing(
     files: list[FileEntry],

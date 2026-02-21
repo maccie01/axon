@@ -16,7 +16,6 @@ from axon import __version__
 
 console = Console()
 
-
 def _load_storage(repo_path: Path | None = None) -> "KuzuBackend":  # noqa: F821
     """Load the KuzuDB backend for the given or current repo."""
     from axon.core.storage.kuzu_backend import KuzuBackend
@@ -33,20 +32,17 @@ def _load_storage(repo_path: Path | None = None) -> "KuzuBackend":  # noqa: F821
     storage.initialize(db_path)
     return storage
 
-
 app = typer.Typer(
     name="axon",
     help="Axon — Graph-powered code intelligence engine.",
     no_args_is_help=True,
 )
 
-
 def _version_callback(value: bool) -> None:
     """Print the version and exit."""
     if value:
         console.print(f"Axon v{__version__}")
         raise typer.Exit()
-
 
 @app.callback()
 def main(
@@ -60,7 +56,6 @@ def main(
     ),
 ) -> None:
     """Axon — Graph-powered code intelligence engine."""
-
 
 @app.command()
 def analyze(
@@ -78,16 +73,13 @@ def analyze(
 
     console.print(f"[bold]Indexing[/bold] {repo_path}")
 
-    # Prepare storage directory.
     axon_dir = repo_path / ".axon"
     axon_dir.mkdir(parents=True, exist_ok=True)
     db_path = axon_dir / "kuzu"
 
-    # Initialise KuzuDB backend.
     storage = KuzuBackend()
     storage.initialize(db_path)
 
-    # Run the pipeline with a Rich progress display.
     result: PipelineResult | None = None
     with Progress(
         SpinnerColumn(),
@@ -107,7 +99,6 @@ def analyze(
             progress_callback=on_progress,
         )
 
-    # Write meta.json.
     meta = {
         "version": __version__,
         "name": repo_path.name,
@@ -126,7 +117,6 @@ def analyze(
     meta_path = axon_dir / "meta.json"
     meta_path.write_text(json.dumps(meta, indent=2) + "\n", encoding="utf-8")
 
-    # Print summary.
     console.print()
     console.print("[bold green]Indexing complete.[/bold green]")
     console.print(f"  Files:          {result.files}")
@@ -143,7 +133,6 @@ def analyze(
     console.print(f"  Duration:       {result.duration_seconds:.2f}s")
 
     storage.close()
-
 
 @app.command()
 def status() -> None:
@@ -176,7 +165,6 @@ def status() -> None:
     if stats.get("coupled_pairs", 0) > 0:
         console.print(f"  Coupled pairs:  {stats['coupled_pairs']}")
 
-
 @app.command(name="list")
 def list_repos() -> None:
     """List all indexed repositories."""
@@ -184,7 +172,6 @@ def list_repos() -> None:
 
     result = handle_list_repos()
     console.print(result)
-
 
 @app.command()
 def clean(
@@ -209,7 +196,6 @@ def clean(
     shutil.rmtree(axon_dir)
     console.print(f"[green]Deleted[/green] {axon_dir}")
 
-
 @app.command()
 def query(
     q: str = typer.Argument(..., help="Search query for the knowledge graph."),
@@ -223,7 +209,6 @@ def query(
     console.print(result)
     storage.close()
 
-
 @app.command()
 def context(
     name: str = typer.Argument(..., help="Symbol name to inspect."),
@@ -235,7 +220,6 @@ def context(
     result = handle_context(storage, name)
     console.print(result)
     storage.close()
-
 
 @app.command()
 def impact(
@@ -250,7 +234,6 @@ def impact(
     console.print(result)
     storage.close()
 
-
 @app.command(name="dead-code")
 def dead_code() -> None:
     """List all detected dead code."""
@@ -260,7 +243,6 @@ def dead_code() -> None:
     result = handle_dead_code(storage)
     console.print(result)
     storage.close()
-
 
 @app.command()
 def cypher(
@@ -273,7 +255,6 @@ def cypher(
     result = handle_cypher(storage, query)
     console.print(result)
     storage.close()
-
 
 @app.command()
 def setup(
@@ -294,7 +275,6 @@ def setup(
         console.print("[bold]Add to your Cursor MCP config:[/bold]")
         console.print(json.dumps({"axon": mcp_config}, indent=2))
 
-
 @app.command()
 def watch() -> None:
     """Watch mode — re-index on file changes."""
@@ -312,7 +292,6 @@ def watch() -> None:
     storage = KuzuBackend()
     storage.initialize(db_path)
 
-    # Run initial full index if no data exists.
     if not (axon_dir / "meta.json").exists():
         console.print("[bold]Running initial index...[/bold]")
         run_pipeline(repo_path, storage, full=True)
@@ -325,7 +304,6 @@ def watch() -> None:
         console.print("\n[bold]Watch stopped.[/bold]")
     finally:
         storage.close()
-
 
 @app.command()
 def diff(
@@ -342,7 +320,6 @@ def diff(
         raise typer.Exit(code=1) from exc
 
     console.print(format_diff(result))
-
 
 @app.command()
 def mcp() -> None:

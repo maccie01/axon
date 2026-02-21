@@ -22,14 +22,7 @@ from axon.core.parsers.base import ImportInfo
 
 logger = logging.getLogger(__name__)
 
-# File extensions tried when resolving JS/TS bare imports (no extension).
 _JS_TS_EXTENSIONS = (".ts", ".js", ".tsx", ".jsx")
-
-
-# ---------------------------------------------------------------------------
-# Public API
-# ---------------------------------------------------------------------------
-
 
 def build_file_index(graph: KnowledgeGraph) -> dict[str, str]:
     """Build an index mapping file paths to their graph node IDs.
@@ -45,7 +38,6 @@ def build_file_index(graph: KnowledgeGraph) -> dict[str, str]:
     """
     file_nodes = graph.get_nodes_by_label(NodeLabel.FILE)
     return {node.file_path: node.id for node in file_nodes}
-
 
 def resolve_import_path(
     importing_file: str,
@@ -76,7 +68,6 @@ def resolve_import_path(
         return _resolve_js_ts(importing_file, import_info, file_index)
 
     return None
-
 
 def process_imports(
     parse_data: list[FileParseData],
@@ -119,12 +110,6 @@ def process_imports(
                 )
             )
 
-
-# ---------------------------------------------------------------------------
-# Internal helpers
-# ---------------------------------------------------------------------------
-
-
 def _detect_language(file_path: str) -> str:
     """Infer language from a file's extension."""
     suffix = PurePosixPath(file_path).suffix.lower()
@@ -135,7 +120,6 @@ def _detect_language(file_path: str) -> str:
     if suffix in (".js", ".jsx"):
         return "javascript"
     return ""
-
 
 def _resolve_python(
     importing_file: str,
@@ -155,7 +139,6 @@ def _resolve_python(
         return _resolve_python_relative(importing_file, import_info, file_index)
     return _resolve_python_absolute(import_info, file_index)
 
-
 def _resolve_python_relative(
     importing_file: str,
     import_info: ImportInfo,
@@ -171,7 +154,6 @@ def _resolve_python_relative(
     """
     module = import_info.module
 
-    # Count leading dots to determine relative depth.
     dot_count = 0
     for ch in module:
         if ch == ".":
@@ -179,15 +161,12 @@ def _resolve_python_relative(
         else:
             break
 
-    # The remaining module path after the dots.
     remainder = module[dot_count:]
 
-    # Start from the importing file's parent directory and go up.
     base = PurePosixPath(importing_file).parent
     for _ in range(dot_count - 1):
         base = base.parent
 
-    # Convert dotted remainder to path segments.
     if remainder:
         segments = remainder.split(".")
         target_dir = base / PurePosixPath(*segments)
@@ -195,7 +174,6 @@ def _resolve_python_relative(
         target_dir = base
 
     return _try_python_paths(str(target_dir), file_index)
-
 
 def _resolve_python_absolute(
     import_info: ImportInfo,
@@ -211,7 +189,6 @@ def _resolve_python_absolute(
     segments = module.split(".")
     target_path = str(PurePosixPath(*segments))
     return _try_python_paths(target_path, file_index)
-
 
 def _try_python_paths(base_path: str, file_index: dict[str, str]) -> str | None:
     """Try common Python file resolution patterns for *base_path*.
@@ -229,7 +206,6 @@ def _try_python_paths(base_path: str, file_index: dict[str, str]) -> str | None:
             return file_index[candidate]
     return None
 
-
 def _resolve_js_ts(
     importing_file: str,
     import_info: ImportInfo,
@@ -243,18 +219,15 @@ def _resolve_js_ts(
     """
     module = import_info.module
 
-    # Bare specifiers (no leading dot) are external packages.
     if not module.startswith("."):
         return None
 
     base = PurePosixPath(importing_file).parent
     resolved = base / module
 
-    # Normalise away any ".." or "." segments.
     resolved_str = str(PurePosixPath(*resolved.parts))
 
     return _try_js_ts_paths(resolved_str, file_index)
-
 
 def _try_js_ts_paths(base_path: str, file_index: dict[str, str]) -> str | None:
     """Try common JS/TS file resolution patterns for *base_path*.

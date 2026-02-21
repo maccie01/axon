@@ -50,10 +50,8 @@ DEFAULT_IGNORE_PATTERNS: frozenset[str] = frozenset(
 _GLOB_PATTERNS: frozenset[str] = frozenset(p for p in DEFAULT_IGNORE_PATTERNS if "*" in p or "?" in p)
 _LITERAL_PATTERNS: frozenset[str] = DEFAULT_IGNORE_PATTERNS - _GLOB_PATTERNS
 
-
 def _matches_default_patterns(path: Path) -> bool:
     """Check whether *path* (relative) matches any default ignore pattern."""
-    # Check each path component against literal directory/file names
     for part in path.parts:
         if part in _LITERAL_PATTERNS:
             return True
@@ -63,9 +61,7 @@ def _matches_default_patterns(path: Path) -> bool:
                 return True
     return False
 
-
 _pathspec_cache: dict[int, object] = {}
-
 
 def _matches_gitignore(path: Path, gitignore_patterns: list[str]) -> bool:
     """Check *path* against a list of gitignore-style patterns.
@@ -95,7 +91,6 @@ def _matches_gitignore(path: Path, gitignore_patterns: list[str]) -> bool:
                 return True
         return False
 
-
 def should_ignore(
     path: str | Path,
     gitignore_patterns: list[str] | None = None,
@@ -118,7 +113,6 @@ def should_ignore(
         return True
 
     return False
-
 
 def load_gitignore(repo_path: Path) -> list[str]:
     """Read ``.gitignore`` from *repo_path* and return a list of patterns.

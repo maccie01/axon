@@ -33,7 +33,6 @@ EMBEDDABLE_LABELS: frozenset[NodeLabel] = frozenset(
     }
 )
 
-
 def embed_graph(
     graph: KnowledgeGraph,
     model_name: str = "BAAI/bge-small-en-v1.5",
@@ -56,7 +55,6 @@ def embed_graph(
         each carrying the node's ID and its embedding vector as a plain
         Python ``list[float]``.
     """
-    # 1. Collect embeddable nodes and generate their text descriptions.
     nodes = [n for n in graph.iter_nodes() if n.label in EMBEDDABLE_LABELS]
 
     if not nodes:
@@ -65,14 +63,12 @@ def embed_graph(
     class_method_idx = build_class_method_index(graph)
     texts = [generate_text(node, graph, class_method_idx) for node in nodes]
 
-    # 2. Embed all texts in one call (fastembed handles internal batching).
     model = _MODEL_CACHE.get(model_name)
     if model is None:
         model = TextEmbedding(model_name=model_name)
         _MODEL_CACHE[model_name] = model
     vectors = list(model.embed(texts, batch_size=batch_size))
 
-    # 3. Pair each node with its embedding vector.
     results: list[NodeEmbedding] = []
     for node, vector in zip(nodes, vectors):
         results.append(

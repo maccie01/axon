@@ -16,12 +16,6 @@ from axon.core.graph.model import GraphNode, GraphRelationship
 if TYPE_CHECKING:
     from axon.core.graph.graph import KnowledgeGraph
 
-
-# ---------------------------------------------------------------------------
-# Supporting data classes
-# ---------------------------------------------------------------------------
-
-
 @dataclass
 class SearchResult:
     """A single result from a full-text or vector search."""
@@ -33,19 +27,12 @@ class SearchResult:
     label: str = ""
     snippet: str = ""
 
-
 @dataclass
 class NodeEmbedding:
     """An embedding vector associated with a graph node."""
 
     node_id: str
     embedding: list[float] = field(default_factory=list)
-
-
-# ---------------------------------------------------------------------------
-# Storage backend protocol
-# ---------------------------------------------------------------------------
-
 
 @runtime_checkable
 class StorageBackend(Protocol):
@@ -56,8 +43,6 @@ class StorageBackend(Protocol):
     search, vector search, and incremental re-indexing support.
     """
 
-    # -- Lifecycle -----------------------------------------------------------
-
     def initialize(self, path: Path) -> None:
         """Open or create the backing store at *path*."""
         ...
@@ -65,8 +50,6 @@ class StorageBackend(Protocol):
     def close(self) -> None:
         """Release resources held by the backend."""
         ...
-
-    # -- Graph CRUD ----------------------------------------------------------
 
     def add_nodes(self, nodes: list[GraphNode]) -> None:
         """Insert or upsert a batch of nodes."""
@@ -83,8 +66,6 @@ class StorageBackend(Protocol):
             The number of nodes removed.
         """
         ...
-
-    # -- Queries -------------------------------------------------------------
 
     def get_node(self, node_id: str) -> GraphNode | None:
         """Return a single node by ID, or ``None`` if not found."""
@@ -110,8 +91,6 @@ class StorageBackend(Protocol):
         """Execute a raw backend-specific query string."""
         ...
 
-    # -- Search --------------------------------------------------------------
-
     def fts_search(self, query: str, limit: int) -> list[SearchResult]:
         """Full-text search across indexed node content."""
         ...
@@ -122,8 +101,6 @@ class StorageBackend(Protocol):
         """Fuzzy name search by edit distance."""
         ...
 
-    # -- Vectors -------------------------------------------------------------
-
     def store_embeddings(self, embeddings: list[NodeEmbedding]) -> None:
         """Persist embedding vectors for the given nodes."""
         ...
@@ -131,8 +108,6 @@ class StorageBackend(Protocol):
     def vector_search(self, vector: list[float], limit: int) -> list[SearchResult]:
         """Find the closest nodes to *vector* by cosine similarity."""
         ...
-
-    # -- Incremental ---------------------------------------------------------
 
     def get_indexed_files(self) -> dict[str, str]:
         """Return a mapping of ``{file_path: content_hash}`` for all indexed files."""

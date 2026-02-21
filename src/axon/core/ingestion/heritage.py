@@ -21,7 +21,6 @@ from axon.core.ingestion.parser_phase import FileParseData
 
 logger = logging.getLogger(__name__)
 
-# Labels that participate in heritage relationships.
 _HERITAGE_LABELS: tuple[NodeLabel, ...] = (NodeLabel.CLASS, NodeLabel.INTERFACE)
 
 _KIND_TO_REL: dict[str, RelType] = {
@@ -29,15 +28,7 @@ _KIND_TO_REL: dict[str, RelType] = {
     "implements": RelType.IMPLEMENTS,
 }
 
-# Parent class names that indicate the child is a protocol/abstract interface.
-# These are typically unresolvable because they come from the standard library.
 _PROTOCOL_MARKERS: frozenset[str] = frozenset({"Protocol", "ABC", "ABCMeta"})
-
-
-# ---------------------------------------------------------------------------
-# Symbol index
-# ---------------------------------------------------------------------------
-
 
 def build_symbol_index(graph: KnowledgeGraph) -> dict[str, list[str]]:
     """Build a mapping from symbol names to their node IDs.
@@ -56,12 +47,6 @@ def build_symbol_index(graph: KnowledgeGraph) -> dict[str, list[str]]:
         for node in graph.get_nodes_by_label(label):
             index.setdefault(node.name, []).append(node.id)
     return index
-
-
-# ---------------------------------------------------------------------------
-# Internal helpers
-# ---------------------------------------------------------------------------
-
 
 def _resolve_node(
     name: str,
@@ -82,20 +67,12 @@ def _resolve_node(
     if not candidate_ids:
         return None
 
-    # Prefer a same-file match.
     for nid in candidate_ids:
         node = graph.get_node(nid)
         if node is not None and node.file_path == file_path:
             return nid
 
-    # Fall back to the first candidate (cross-file reference).
     return candidate_ids[0]
-
-
-# ---------------------------------------------------------------------------
-# Public API
-# ---------------------------------------------------------------------------
-
 
 def process_heritage(
     parse_data: list[FileParseData],

@@ -26,18 +26,11 @@ from axon.core.parsers.base import CallInfo
 
 logger = logging.getLogger(__name__)
 
-# Labels eligible as call targets.
 _CALLABLE_LABELS: tuple[NodeLabel, ...] = (
     NodeLabel.FUNCTION,
     NodeLabel.METHOD,
     NodeLabel.CLASS,
 )
-
-
-# ---------------------------------------------------------------------------
-# Call index
-# ---------------------------------------------------------------------------
-
 
 def build_call_index(graph: KnowledgeGraph) -> dict[str, list[str]]:
     """Build a mapping from symbol names to their node IDs.
@@ -57,12 +50,6 @@ def build_call_index(graph: KnowledgeGraph) -> dict[str, list[str]]:
         for node in graph.get_nodes_by_label(label):
             index.setdefault(node.name, []).append(node.id)
     return index
-
-
-# ---------------------------------------------------------------------------
-# Call resolution
-# ---------------------------------------------------------------------------
-
 
 def resolve_call(
     call: CallInfo,
@@ -101,16 +88,12 @@ def resolve_call(
     name = call.name
     receiver = call.receiver
 
-    # Method calls with self/this receiver: look within the same class.
     if receiver in ("self", "this"):
         result = _resolve_self_method(name, file_path, call_index, graph)
         if result is not None:
             return result, 1.0
 
-    # For other method calls, use the method name for resolution.
-    # The receiver doesn't help us without type information, so we
-    # fall through to the standard resolution chain using the method name.
-
+    # Without type info the receiver doesn't help — fall through to name-based resolution.
     candidate_ids = call_index.get(name, [])
     if not candidate_ids:
         return None, 0.0
@@ -128,7 +111,6 @@ def resolve_call(
 
     # 3. Global fuzzy match -- prefer shortest file path.
     return _pick_closest(candidate_ids, graph), 0.5
-
 
 def _resolve_self_method(
     method_name: str,
@@ -150,7 +132,6 @@ def _resolve_self_method(
         ):
             return nid
     return None
-
 
 def _resolve_via_imports(
     name: str,
@@ -185,14 +166,12 @@ def _resolve_via_imports(
             if target_node is not None:
                 imported_file_ids.add(target_node.file_path)
 
-    # Now check if any candidate symbol lives in an imported file.
     for nid in candidate_ids:
         node = graph.get_node(nid)
         if node is not None and node.file_path in imported_file_ids:
             return nid
 
     return None
-
 
 def _pick_closest(candidate_ids: list[str], graph: KnowledgeGraph) -> str | None:
     """Pick the candidate with the shortest file path (proximity heuristic).
@@ -209,12 +188,6 @@ def _pick_closest(candidate_ids: list[str], graph: KnowledgeGraph) -> str | None
             best_id = nid
 
     return best_id
-
-
-# ---------------------------------------------------------------------------
-# Public API
-# ---------------------------------------------------------------------------
-
 
 def process_calls(
     parse_data: list[FileParseData],
@@ -245,7 +218,6 @@ def process_calls(
 
     for fpd in parse_data:
         for call in fpd.parse_result.calls:
-            # Find which symbol contains this call.
             source_id = find_containing_symbol(
                 call.line, fpd.file_path, file_sym_index
             )
@@ -258,14 +230,12 @@ def process_calls(
                 )
                 continue
 
-            # Resolve the call target.
             target_id, confidence = resolve_call(
                 call, fpd.file_path, call_index, graph
             )
             if target_id is None:
                 continue
 
-            # Create the CALLS relationship.
             rel_id = f"calls:{source_id}->{target_id}"
             if rel_id in seen:
                 continue

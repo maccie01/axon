@@ -28,12 +28,6 @@ from axon.core.graph.model import (
 
 logger = logging.getLogger(__name__)
 
-
-# ---------------------------------------------------------------------------
-# Git log parsing
-# ---------------------------------------------------------------------------
-
-
 def parse_git_log(
     repo_path: Path,
     since_months: int = 6,
@@ -90,7 +84,6 @@ def parse_git_log(
                 commits.append(current_files)
             current_files = []
         else:
-            # It is a file path.
             if graph_files is None or stripped in graph_files:
                 current_files.append(stripped)
 
@@ -99,12 +92,6 @@ def parse_git_log(
         commits.append(current_files)
 
     return commits
-
-
-# ---------------------------------------------------------------------------
-# Co-change matrix
-# ---------------------------------------------------------------------------
-
 
 def build_cochange_matrix(
     commits: list[list[str]],
@@ -143,12 +130,6 @@ def build_cochange_matrix(
 
     return {pair: count for pair, count in counts.items() if count >= min_cochanges}
 
-
-# ---------------------------------------------------------------------------
-# Coupling calculation
-# ---------------------------------------------------------------------------
-
-
 def calculate_coupling(
     file_a: str,
     file_b: str,
@@ -177,12 +158,6 @@ def calculate_coupling(
         return 0.0
     return co_changes / max_changes
 
-
-# ---------------------------------------------------------------------------
-# Public entry point
-# ---------------------------------------------------------------------------
-
-
 def process_coupling(
     graph: KnowledgeGraph,
     repo_path: Path,
@@ -206,11 +181,9 @@ def process_coupling(
     Returns:
         The number of ``COUPLED_WITH`` relationships created.
     """
-    # Collect file paths known to the graph.
     file_nodes = graph.get_nodes_by_label(NodeLabel.FILE)
     graph_files: set[str] = {n.file_path for n in file_nodes}
 
-    # Obtain commit data.
     if commits is None:
         commits = parse_git_log(repo_path, graph_files=graph_files)
 
@@ -223,7 +196,6 @@ def process_coupling(
         for f in set(files):
             total_changes[f] += 1
 
-    # Build a quick lookup: file_path -> node ID.
     path_to_id: dict[str, str] = {n.file_path: n.id for n in file_nodes}
 
     count = 0
@@ -232,7 +204,6 @@ def process_coupling(
         if strength < min_strength:
             continue
 
-        # Resolve node IDs for both files.
         id_a = path_to_id.get(file_a)
         id_b = path_to_id.get(file_b)
         if id_a is None or id_b is None:

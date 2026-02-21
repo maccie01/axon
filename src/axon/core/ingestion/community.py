@@ -25,18 +25,11 @@ from axon.core.graph.model import (
 
 logger = logging.getLogger(__name__)
 
-# Node labels that participate in the call graph.
 _CALLABLE_LABELS: tuple[NodeLabel, ...] = (
     NodeLabel.FUNCTION,
     NodeLabel.METHOD,
     NodeLabel.CLASS,
 )
-
-
-# ---------------------------------------------------------------------------
-# Export to igraph
-# ---------------------------------------------------------------------------
-
 
 def export_to_igraph(
     graph: KnowledgeGraph,
@@ -53,7 +46,6 @@ def export_to_igraph(
         A tuple of ``(igraph_graph, vertex_index_to_node_id)`` where the
         mapping connects igraph vertex indices back to Axon node IDs.
     """
-    # Collect eligible nodes and assign them contiguous vertex indices.
     node_id_to_index: dict[str, int] = {}
     index_to_node_id: dict[int, str] = {}
 
@@ -65,7 +57,6 @@ def export_to_igraph(
 
     num_vertices = len(node_id_to_index)
 
-    # Build edge list from CALLS relationships.
     edge_list: list[tuple[int, int]] = []
     for rel in graph.get_relationships_by_type(RelType.CALLS):
         src_idx = node_id_to_index.get(rel.source)
@@ -78,12 +69,6 @@ def export_to_igraph(
     ig_graph.add_edges(edge_list)
 
     return ig_graph, index_to_node_id
-
-
-# ---------------------------------------------------------------------------
-# Label generation
-# ---------------------------------------------------------------------------
-
 
 def generate_label(graph: KnowledgeGraph, member_ids: list[str]) -> str:
     """Generate a heuristic label for a community based on member file paths.
@@ -125,12 +110,6 @@ def generate_label(graph: KnowledgeGraph, member_ids: list[str]) -> str:
     label = f"{most_common[0][0]}+{most_common[1][0]}"
     return label.capitalize()
 
-
-# ---------------------------------------------------------------------------
-# Community processing
-# ---------------------------------------------------------------------------
-
-
 def process_communities(
     graph: KnowledgeGraph,
     min_community_size: int = 2,
@@ -162,7 +141,6 @@ def process_communities(
         )
         return 0
 
-    # Run Leiden algorithm.
     partition = leidenalg.find_partition(
         ig_graph, leidenalg.ModularityVertexPartition
     )
@@ -173,10 +151,8 @@ def process_communities(
         if len(members) < min_community_size:
             continue
 
-        # Map vertex indices back to Axon node IDs.
         member_ids = [index_to_node_id[idx] for idx in members]
 
-        # Create community node.
         community_id = generate_id(NodeLabel.COMMUNITY, f"community_{i}")
         label = generate_label(graph, member_ids)
 
@@ -191,7 +167,6 @@ def process_communities(
         )
         graph.add_node(community_node)
 
-        # Create MEMBER_OF relationships.
         for member_id in member_ids:
             rel_id = f"member_of:{member_id}->{community_id}"
             graph.add_relationship(

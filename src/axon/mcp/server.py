@@ -38,12 +38,7 @@ from axon.mcp.tools import (
 
 logger = logging.getLogger(__name__)
 
-# ---------------------------------------------------------------------------
-# Server instance
-# ---------------------------------------------------------------------------
-
 server = Server("axon")
-
 
 class _StorageHolder:
     """Encapsulates lazy-initialised storage to avoid module-level globals."""
@@ -75,18 +70,11 @@ class _StorageHolder:
             self._storage.close()
             self._storage = None
 
-
 _holder = _StorageHolder()
-
 
 def _get_storage() -> KuzuBackend:
     """Return the lazily-initialised storage backend."""
     return _holder.get()
-
-
-# ---------------------------------------------------------------------------
-# Tool definitions
-# ---------------------------------------------------------------------------
 
 TOOLS: list[Tool] = [
     Tool(
@@ -198,17 +186,10 @@ TOOLS: list[Tool] = [
     ),
 ]
 
-
-# ---------------------------------------------------------------------------
-# Handler registration
-# ---------------------------------------------------------------------------
-
-
 @server.list_tools()
 async def list_tools() -> list[Tool]:
     """Return the list of available Axon tools."""
     return TOOLS
-
 
 @server.call_tool()
 async def call_tool(name: str, arguments: dict) -> list[TextContent]:
@@ -248,12 +229,6 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
 
     return [TextContent(type="text", text=result)]
 
-
-# ---------------------------------------------------------------------------
-# Resource registration
-# ---------------------------------------------------------------------------
-
-
 @server.list_resources()
 async def list_resources() -> list[Resource]:
     """Return the list of available Axon resources."""
@@ -278,7 +253,6 @@ async def list_resources() -> list[Resource]:
         ),
     ]
 
-
 @server.read_resource()
 async def read_resource(uri) -> str:
     """Read the contents of an Axon resource."""
@@ -297,17 +271,10 @@ async def read_resource(uri) -> str:
 
     return f"Unknown resource: {uri_str}"
 
-
-# ---------------------------------------------------------------------------
-# Entry point
-# ---------------------------------------------------------------------------
-
-
 async def main() -> None:
     """Run the Axon MCP server over stdio transport."""
     async with stdio_server() as (read, write):
         await server.run(read, write, server.create_initialization_options())
-
 
 if __name__ == "__main__":
     asyncio.run(main())

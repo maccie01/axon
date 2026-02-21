@@ -20,7 +20,6 @@ from axon.core.storage.base import SearchResult
 if TYPE_CHECKING:
     from axon.core.storage.base import StorageBackend
 
-
 def hybrid_search(
     query: str,
     storage: StorageBackend,
@@ -62,15 +61,12 @@ def hybrid_search(
     if query_embedding is not None:
         vector_results = storage.vector_search(query_embedding, limit=candidate_limit)
 
-    # Step 2: compute RRF scores
-    # Track scores and metadata per unique node_id
     rrf_scores: dict[str, float] = {}
     metadata: dict[str, SearchResult] = {}
 
     _accumulate_ranks(fts_results, fts_weight, rrf_k, rrf_scores, metadata)
     _accumulate_ranks(vector_results, vector_weight, rrf_k, rrf_scores, metadata)
 
-    # Step 3: build final result list sorted by descending score
     merged: list[SearchResult] = []
     for node_id, score in rrf_scores.items():
         source = metadata[node_id]
@@ -81,7 +77,6 @@ def hybrid_search(
     merged.sort(key=lambda r: r.score, reverse=True)
 
     return merged[:limit]
-
 
 def _accumulate_ranks(
     results: list[SearchResult],

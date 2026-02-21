@@ -21,10 +21,6 @@ from axon.core.parsers.base import (
     TypeRef,
 )
 
-# ---------------------------------------------------------------------------
-# Language singletons
-# ---------------------------------------------------------------------------
-
 TS_LANGUAGE = Language(tstypescript.language_typescript())
 TSX_LANGUAGE = Language(tstypescript.language_tsx())
 JS_LANGUAGE = Language(tsjavascript.language())
@@ -35,7 +31,6 @@ _DIALECT_MAP: dict[str, Language] = {
     "javascript": JS_LANGUAGE,
 }
 
-# Built-in TypeScript types that should be skipped in type_refs.
 _BUILTIN_TYPES: frozenset[str] = frozenset(
     {
         "string",
@@ -50,7 +45,6 @@ _BUILTIN_TYPES: frozenset[str] = frozenset(
         "object",
     }
 )
-
 
 class TypeScriptParser(LanguageParser):
     """Parse TypeScript, TSX, or JavaScript files via tree-sitter.
@@ -69,10 +63,6 @@ class TypeScriptParser(LanguageParser):
         self._language = _DIALECT_MAP[dialect]
         self._parser = Parser(self._language)
 
-    # ------------------------------------------------------------------
-    # Public API
-    # ------------------------------------------------------------------
-
     def parse(self, content: str, file_path: str) -> ParseResult:
         """Parse *content* and return an intermediate :class:`ParseResult`."""
         tree = self._parser.parse(content.encode("utf-8"))
@@ -80,10 +70,6 @@ class TypeScriptParser(LanguageParser):
         result = ParseResult()
         self._walk(tree.root_node, content, result)
         return result
-
-    # ------------------------------------------------------------------
-    # Recursive walk
-    # ------------------------------------------------------------------
 
     def _walk(
         self, node: Node, source: str, result: ParseResult, visited: set[int] | None = None
@@ -124,10 +110,6 @@ class TypeScriptParser(LanguageParser):
         for child in node.children:
             self._walk(child, source, result, visited)
 
-    # ------------------------------------------------------------------
-    # Functions
-    # ------------------------------------------------------------------
-
     def _extract_function_declaration(
         self, node: Node, source: str, result: ParseResult
     ) -> None:
@@ -152,7 +134,6 @@ class TypeScriptParser(LanguageParser):
             )
         )
 
-        # Extract parameter types and return type.
         self._extract_function_types(node, name, result)
 
     def _extract_method(self, node: Node, source: str, result: ParseResult) -> None:
@@ -166,7 +147,6 @@ class TypeScriptParser(LanguageParser):
         end_line = node.end_point[0] + 1
         content = node.text.decode()
 
-        # Determine owning class by walking up to class_declaration.
         class_name = self._find_parent_class_name(node)
 
         signature = self._build_function_signature(node, name)
@@ -184,10 +164,6 @@ class TypeScriptParser(LanguageParser):
         )
 
         self._extract_function_types(node, name, result)
-
-    # ------------------------------------------------------------------
-    # Variable declarations (arrow functions, function expressions, require)
-    # ------------------------------------------------------------------
 
     def _extract_variable_declaration(
         self, node: Node, source: str, result: ParseResult
@@ -209,7 +185,6 @@ class TypeScriptParser(LanguageParser):
             elif value_node.type == "call_expression":
                 self._maybe_extract_require(child, var_name, value_node, result)
 
-            # Variable type annotation: const x: Config = ...
             self._extract_variable_type_annotation(child, result)
 
     def _extract_assigned_function(
@@ -220,7 +195,6 @@ class TypeScriptParser(LanguageParser):
         result: ParseResult,
     ) -> None:
         """Extract an arrow function or function expression assigned to a variable."""
-        # Use the entire lexical_declaration as the span.
         outer = declarator_node.parent
         if outer is None:
             outer = declarator_node
@@ -259,7 +233,6 @@ class TypeScriptParser(LanguageParser):
         if args is None:
             return
 
-        # First real argument (skip parentheses).
         module_str = ""
         for arg_child in args.children:
             if arg_child.type == "string":
@@ -276,10 +249,6 @@ class TypeScriptParser(LanguageParser):
                 is_relative=module_str.startswith("."),
             )
         )
-
-    # ------------------------------------------------------------------
-    # Classes
-    # ------------------------------------------------------------------
 
     def _extract_class(self, node: Node, source: str, result: ParseResult) -> None:
         name_node = node.child_by_field_name("name")
@@ -301,7 +270,6 @@ class TypeScriptParser(LanguageParser):
             )
         )
 
-        # Heritage: extends / implements
         for child in node.children:
             if child.type == "class_heritage":
                 self._extract_class_heritage(name, child, result)
@@ -318,10 +286,6 @@ class TypeScriptParser(LanguageParser):
                 for sub in child.children:
                     if sub.type in ("identifier", "type_identifier"):
                         result.heritage.append((class_name, "implements", sub.text.decode()))
-
-    # ------------------------------------------------------------------
-    # Interfaces (TypeScript only)
-    # ------------------------------------------------------------------
 
     def _extract_interface(self, node: Node, source: str, result: ParseResult) -> None:
         name_node = node.child_by_field_name("name")
@@ -343,16 +307,11 @@ class TypeScriptParser(LanguageParser):
             )
         )
 
-        # Interface heritage: extends (interfaces cannot use implements).
         for child in node.children:
             if child.type == "extends_type_clause":
                 for sub in child.children:
                     if sub.type in ("identifier", "type_identifier"):
                         result.heritage.append((name, "extends", sub.text.decode()))
-
-    # ------------------------------------------------------------------
-    # Type aliases (TypeScript only)
-    # ------------------------------------------------------------------
 
     def _extract_type_alias(self, node: Node, source: str, result: ParseResult) -> None:
         name_node = node.child_by_field_name("name")
@@ -374,17 +333,12 @@ class TypeScriptParser(LanguageParser):
             )
         )
 
-    # ------------------------------------------------------------------
-    # Imports
-    # ------------------------------------------------------------------
-
     def _extract_import(self, node: Node, source: str, result: ParseResult) -> None:
         """Handle ES module import statements."""
         module_str = ""
         names: list[str] = []
         alias = ""
 
-        # Find the source/module string.
         source_node = node.child_by_field_name("source")
         if source_node is not None:
             module_str = self._string_value(source_node)
@@ -398,7 +352,6 @@ class TypeScriptParser(LanguageParser):
         if not module_str:
             return
 
-        # Find the import_clause (the part between `import` and `from`).
         import_clause = None
         for child in node.children:
             if child.type == "import_clause":
@@ -434,10 +387,6 @@ class TypeScriptParser(LanguageParser):
             )
         )
 
-    # ------------------------------------------------------------------
-    # Calls
-    # ------------------------------------------------------------------
-
     def _extract_call(self, node: Node, source: str, result: ParseResult) -> None:
         func_node = node.child_by_field_name("function")
         if func_node is None:
@@ -463,15 +412,10 @@ class TypeScriptParser(LanguageParser):
             if name != "require":
                 result.calls.append(CallInfo(name=name, line=line))
 
-    # ------------------------------------------------------------------
-    # Type annotations
-    # ------------------------------------------------------------------
-
     def _extract_function_types(
         self, func_node: Node, func_name: str, result: ParseResult
     ) -> None:
         """Extract parameter types and return type from a function-like node."""
-        # Parameters
         params = func_node.child_by_field_name("parameters")
         if params is None:
             # Some nodes use "formal_parameters" via children iteration.
@@ -536,10 +480,6 @@ class TypeScriptParser(LanguageParser):
                             line=child.start_point[0] + 1,
                         )
                     )
-
-    # ------------------------------------------------------------------
-    # Helpers
-    # ------------------------------------------------------------------
 
     @staticmethod
     def _type_annotation_name(annotation_node: Node) -> str:

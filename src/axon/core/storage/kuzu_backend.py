@@ -26,31 +26,19 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-# ---------------------------------------------------------------------------
-# Constants
-# ---------------------------------------------------------------------------
-
-# Ordered list of node table names derived from the NodeLabel enum.
 _NODE_TABLE_NAMES: list[str] = [label.name.title().replace("_", "") for label in NodeLabel]
-# e.g. ["File", "Folder", "Function", "Class", "Method", "Interface",
-#        "Typealias", "Enum", "Community", "Process"]
 
-# Mapping from lowercase label value to table name.
 _LABEL_TO_TABLE: dict[str, str] = {
     label.value: label.name.title().replace("_", "") for label in NodeLabel
 }
 
-# Mapping from lowercase label value to NodeLabel enum (used by _row_to_node).
 _LABEL_MAP: dict[str, NodeLabel] = {label.value: label for label in NodeLabel}
 
-# Tables worth searching via FTS/fuzzy (skip Folder, Community, Process —
-# they lack meaningful text content for search).
 _SEARCHABLE_TABLES: list[str] = [
     t for t in _NODE_TABLE_NAMES
     if t not in ("Folder", "Community", "Process")
 ]
 
-# Common node properties shared across every table.
 _NODE_PROPERTIES = (
     "id STRING, "
     "name STRING, "
@@ -67,7 +55,6 @@ _NODE_PROPERTIES = (
     "PRIMARY KEY (id)"
 )
 
-# Relationship properties on the CodeRelation group.
 _REL_PROPERTIES = (
     "rel_type STRING, "
     "confidence DOUBLE, "
@@ -78,31 +65,16 @@ _REL_PROPERTIES = (
     "symbols STRING"
 )
 
-
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
-
 def _escape(value: str) -> str:
     """Escape a string for safe inclusion in a Cypher literal."""
     return value.replace("\\", "\\\\").replace("'", "\\'")
-
 
 def _table_for_id(node_id: str) -> str | None:
     """Extract the table name from a node ID by mapping its label prefix."""
     prefix = node_id.split(":", 1)[0]
     return _LABEL_TO_TABLE.get(prefix)
 
-
-# Embedding node table schema.
 _EMBEDDING_PROPERTIES = "node_id STRING, vec DOUBLE[], PRIMARY KEY(node_id)"
-
-
-# ---------------------------------------------------------------------------
-# KuzuBackend
-# ---------------------------------------------------------------------------
-
 
 class KuzuBackend:
     """StorageBackend implementation backed by KuzuDB.
@@ -119,8 +91,6 @@ class KuzuBackend:
     def __init__(self) -> None:
         self._db: kuzu.Database | None = None
         self._conn: kuzu.Connection | None = None
-
-    # -- Lifecycle -----------------------------------------------------------
 
     def initialize(self, path: Path, *, read_only: bool = False) -> None:
         """Open or create the KuzuDB database at *path* and set up the schema.
@@ -156,8 +126,6 @@ class KuzuBackend:
                 pass
             self._db = None
 
-    # -- Graph CRUD ----------------------------------------------------------
-
     def add_nodes(self, nodes: list[GraphNode]) -> None:
         """Insert nodes into their respective label tables."""
         for node in nodes:
@@ -190,8 +158,6 @@ class KuzuBackend:
             except Exception:
                 logger.debug("Failed to remove nodes from table %s", table, exc_info=True)
         return total
-
-    # -- Queries -------------------------------------------------------------
 
     def get_node(self, node_id: str) -> GraphNode | None:
         """Return a single node by ID, or ``None`` if not found."""
@@ -294,8 +260,6 @@ class KuzuBackend:
             rows.append(result.get_next())
         return rows
 
-    # -- Search --------------------------------------------------------------
-
     def exact_name_search(self, name: str, limit: int = 5) -> list[SearchResult]:
         """Search for nodes with an exact name match across all searchable tables.
 
@@ -322,7 +286,6 @@ class KuzuBackend:
                     signature = row[4] or ""
                     label_prefix = node_id.split(":", 1)[0] if node_id else ""
                     snippet = content[:200] if content else signature[:200]
-                    # Prioritize source over test files.
                     score = 2.0 if "/tests/" not in file_path else 1.0
                     candidates.append(
                         SearchResult(
@@ -441,8 +404,6 @@ class KuzuBackend:
         candidates.sort(key=lambda r: (-r.score, r.node_id))
         return candidates[:limit]
 
-    # -- Vectors -------------------------------------------------------------
-
     def store_embeddings(self, embeddings: list[NodeEmbedding]) -> None:
         """Persist embedding vectors into the Embedding node table.
 
@@ -455,7 +416,6 @@ class KuzuBackend:
         if self._bulk_store_embeddings_csv(embeddings):
             return
 
-        # Fallback: individual MERGE (upsert).
         for emb in embeddings:
             try:
                 self._conn.execute(
@@ -479,7 +439,6 @@ class KuzuBackend:
         # cannot distinguish DOUBLE[] from LIST for array_cosine_similarity.
         vec_literal = "[" + ", ".join(str(v) for v in vector) + "]"
 
-        # First get the embedding matches with scores.
         try:
             result = self._conn.execute(
                 f"MATCH (e:Embedding) "
@@ -491,7 +450,6 @@ class KuzuBackend:
             logger.debug("vector_search failed", exc_info=True)
             return []
 
-        # Collect embedding results, then batch-fetch node metadata.
         emb_rows: list[tuple[str, float]] = []
         while result.has_next():
             row = result.get_next()
@@ -500,7 +458,6 @@ class KuzuBackend:
         if not emb_rows:
             return []
 
-        # Batch-fetch all node metadata in one pass per table.
         node_cache: dict[str, GraphNode] = {}
         node_ids = [r[0] for r in emb_rows]
         ids_by_table: dict[str, list[str]] = {}
@@ -537,8 +494,6 @@ class KuzuBackend:
             )
         return results
 
-    # -- Incremental ---------------------------------------------------------
-
     def get_indexed_files(self) -> dict[str, str]:
         """Return ``{file_path: sha256(content)}`` for all File nodes.
 
@@ -568,18 +523,15 @@ class KuzuBackend:
         falling back to individual inserts if COPY FROM fails.
         """
         assert self._conn is not None
-        # Clear existing data — delete nodes (relationships cascade).
         for table in _NODE_TABLE_NAMES:
             try:
                 self._conn.execute(f"MATCH (n:{table}) DETACH DELETE n")
             except Exception:
                 pass
 
-        # Batch-load nodes via CSV COPY FROM.
         if not self._bulk_load_nodes_csv(graph):
             self.add_nodes(graph.nodes)
 
-        # Batch-load relationships via CSV COPY FROM.
         if not self._bulk_load_rels_csv(graph):
             self.add_relationships(graph.relationships)
 
@@ -606,8 +558,6 @@ class KuzuBackend:
             except Exception:
                 logger.debug("FTS index rebuild failed for %s", table, exc_info=True)
 
-    # -- Batch CSV helpers ---------------------------------------------------
-
     def _bulk_load_nodes_csv(self, graph: KnowledgeGraph) -> bool:
         """Load all nodes via temporary CSV files + COPY FROM.
 
@@ -617,7 +567,6 @@ class KuzuBackend:
         Returns True on success, False if COPY FROM is not available.
         """
         assert self._conn is not None
-        # Group nodes by table name.
         by_table: dict[str, list[GraphNode]] = {}
         for node in graph.iter_nodes():
             table = _LABEL_TO_TABLE.get(node.label.value)
@@ -665,7 +614,6 @@ class KuzuBackend:
         Returns True on success, False if COPY FROM is not available.
         """
         assert self._conn is not None
-        # Group by (src_table, dst_table).
         by_pair: dict[tuple[str, str], list[GraphRelationship]] = {}
         for rel in graph.iter_relationships():
             src_table = _table_for_id(rel.source)
@@ -712,7 +660,6 @@ class KuzuBackend:
         """
         assert self._conn is not None
         try:
-            # Clear existing embeddings first.
             try:
                 self._conn.execute("MATCH (e:Embedding) DELETE e")
             except Exception:
@@ -737,25 +684,20 @@ class KuzuBackend:
             logger.debug("CSV bulk_store_embeddings failed, falling back", exc_info=True)
             return False
 
-    # -- Internal helpers ----------------------------------------------------
-
     def _create_schema(self) -> None:
         """Create node tables, the CodeRelation relationship table group, and the Embedding table."""
         assert self._conn is not None
 
-        # Load the FTS extension for full-text search.
         try:
             self._conn.execute("INSTALL fts")
             self._conn.execute("LOAD EXTENSION fts")
         except Exception:
             logger.debug("FTS extension load skipped (may already be loaded)", exc_info=True)
 
-        # Create one node table per label.
         for table in _NODE_TABLE_NAMES:
             stmt = f"CREATE NODE TABLE IF NOT EXISTS {table}({_NODE_PROPERTIES})"
             self._conn.execute(stmt)
 
-        # Create the Embedding node table for vector storage.
         self._conn.execute(
             f"CREATE NODE TABLE IF NOT EXISTS Embedding({_EMBEDDING_PROPERTIES})"
         )
@@ -776,7 +718,6 @@ class KuzuBackend:
         except Exception:
             logger.debug("REL TABLE GROUP creation skipped", exc_info=True)
 
-        # Create FTS indexes on all node tables (name, content, signature).
         self._create_fts_indexes()
 
     def _create_fts_indexes(self) -> None:
@@ -904,7 +845,6 @@ class KuzuBackend:
         """
         try:
             nid = node_id or row[0]
-            # Determine the label from the ID prefix.
             prefix = nid.split(":", 1)[0]
             label = _LABEL_MAP.get(prefix, NodeLabel.FILE)
 

@@ -13,7 +13,6 @@ from collections import defaultdict
 from axon.core.graph.graph import KnowledgeGraph
 from axon.core.graph.model import GraphNode, NodeLabel
 
-
 class FileSymbolIndex:
     """Pre-built per-file interval index for fast containment lookups.
 
@@ -37,7 +36,6 @@ class FileSymbolIndex:
 
     def get_start_lines(self, file_path: str) -> list[int] | None:
         return self._start_lines.get(file_path)
-
 
 def build_file_symbol_index(
     graph: KnowledgeGraph,
@@ -66,17 +64,14 @@ def build_file_symbol_index(
                     (node.start_line, node.end_line, span, node.id)
                 )
 
-    # Sort each file's symbols by start_line for binary search.
     for file_entries in entries.values():
         file_entries.sort(key=lambda t: t[0])
 
-    # Pre-compute start_lines lists to avoid per-lookup list creation.
     start_lines: dict[str, list[int]] = {
         fp: [e[0] for e in file_entries] for fp, file_entries in entries.items()
     }
 
     return FileSymbolIndex(entries, start_lines)
-
 
 def find_containing_symbol(
     line: int,
@@ -110,10 +105,8 @@ def find_containing_symbol(
     best_id: str | None = None
     best_span = float("inf")
 
-    # Check entries from idx downward (and a few upward for overlapping ranges).
-    # We need to scan a small window since multiple symbols can start before
-    # our line and contain it.
-    search_start = max(0, idx - 10)  # safety margin for nested symbols
+    # Scan a small window around idx to handle nested/overlapping symbols.
+    search_start = max(0, idx - 10)
     search_end = min(len(entries), idx + 5)
 
     for i in range(search_start, search_end):

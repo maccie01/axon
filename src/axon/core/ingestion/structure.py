@@ -18,7 +18,6 @@ from axon.core.graph.model import (
     generate_id,
 )
 
-
 @dataclass
 class FileInfo:
     """Minimal file info needed by the structure processor."""
@@ -26,7 +25,6 @@ class FileInfo:
     path: str  # relative path
     content: str
     language: str
-
 
 def process_structure(files: list[FileInfo], graph: KnowledgeGraph) -> None:
     """Build File/Folder nodes and CONTAINS relationships from a list of files.
@@ -43,20 +41,16 @@ def process_structure(files: list[FileInfo], graph: KnowledgeGraph) -> None:
         graph: The knowledge graph to populate.  Nodes and relationships are
             **added** (existing content is not removed).
     """
-    # Collect all unique directory paths across every file.
     folder_paths: set[str] = set()
 
     for file_info in files:
         pure = PurePosixPath(file_info.path)
-
-        # Gather every ancestor directory (excluding ".").
         for parent in pure.parents:
             parent_str = str(parent)
             if parent_str == ".":
                 continue
             folder_paths.add(parent_str)
 
-    # --- Create Folder nodes ---------------------------------------------------
     for dir_path in folder_paths:
         folder_id = generate_id(NodeLabel.FOLDER, dir_path)
         if graph.get_node(folder_id) is None:
@@ -69,7 +63,6 @@ def process_structure(files: list[FileInfo], graph: KnowledgeGraph) -> None:
                 )
             )
 
-    # --- Create File nodes -----------------------------------------------------
     for file_info in files:
         file_id = generate_id(NodeLabel.FILE, file_info.path)
         graph.add_node(
@@ -82,8 +75,6 @@ def process_structure(files: list[FileInfo], graph: KnowledgeGraph) -> None:
                 language=file_info.language,
             )
         )
-
-    # --- Create CONTAINS relationships -----------------------------------------
 
     # Folder -> Folder (parent contains child)
     for dir_path in folder_paths:

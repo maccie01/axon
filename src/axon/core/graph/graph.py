@@ -13,7 +13,6 @@ from collections.abc import Iterator
 
 from axon.core.graph.model import GraphNode, GraphRelationship, NodeLabel, RelType
 
-
 class KnowledgeGraph:
     """An in-memory directed graph of code-level entities and their relationships.
 
@@ -34,10 +33,6 @@ class KnowledgeGraph:
         self._by_rel_type: dict[RelType, dict[str, GraphRelationship]] = defaultdict(dict)
         self._outgoing: dict[str, dict[str, GraphRelationship]] = defaultdict(dict)
         self._incoming: dict[str, dict[str, GraphRelationship]] = defaultdict(dict)
-
-    # ------------------------------------------------------------------
-    # Properties
-    # ------------------------------------------------------------------
 
     @property
     def nodes(self) -> list[GraphNode]:
@@ -78,10 +73,6 @@ class KnowledgeGraph:
         """
         rels = self._incoming.get(node_id, {})
         return any(r.type == rel_type for r in rels.values())
-
-    # ------------------------------------------------------------------
-    # CRUD — Nodes
-    # ------------------------------------------------------------------
 
     def add_node(self, node: GraphNode) -> None:
         """Add *node* to the graph, replacing any existing node with the same id."""
@@ -129,10 +120,6 @@ class KnowledgeGraph:
         self._cascade_relationships_for_nodes(ids_set)
         return len(ids_to_remove)
 
-    # ------------------------------------------------------------------
-    # CRUD — Relationships
-    # ------------------------------------------------------------------
-
     def add_relationship(self, rel: GraphRelationship) -> None:
         """Add *rel* to the graph, replacing any existing relationship with the same id."""
         old = self._relationships.get(rel.id)
@@ -144,10 +131,6 @@ class KnowledgeGraph:
         self._by_rel_type[rel.type][rel.id] = rel
         self._outgoing[rel.source][rel.id] = rel
         self._incoming[rel.target][rel.id] = rel
-
-    # ------------------------------------------------------------------
-    # Queries
-    # ------------------------------------------------------------------
 
     def get_nodes_by_label(self, label: NodeLabel) -> list[GraphNode]:
         """Return all nodes whose label matches *label*."""
@@ -181,28 +164,18 @@ class KnowledgeGraph:
             return list(rels.values())
         return [r for r in rels.values() if r.type == rel_type]
 
-    # ------------------------------------------------------------------
-    # Stats
-    # ------------------------------------------------------------------
-
     def stats(self) -> dict[str, int]:
         """Return a summary of graph size."""
         return {"nodes": len(self._nodes), "relationships": len(self._relationships)}
 
-    # ------------------------------------------------------------------
-    # Internal helpers
-    # ------------------------------------------------------------------
-
     def _cascade_relationships_for_node(self, node_id: str) -> None:
         """Remove all relationships where *node_id* is source or target."""
-        # Outgoing
         out_rels = list(self._outgoing.pop(node_id, {}).values())
         for rel in out_rels:
             self._relationships.pop(rel.id, None)
             self._by_rel_type.get(rel.type, {}).pop(rel.id, None)
             self._incoming.get(rel.target, {}).pop(rel.id, None)
 
-        # Incoming
         in_rels = list(self._incoming.pop(node_id, {}).values())
         for rel in in_rels:
             self._relationships.pop(rel.id, None)

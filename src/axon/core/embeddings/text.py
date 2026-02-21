@@ -11,7 +11,6 @@ from __future__ import annotations
 from axon.core.graph.graph import KnowledgeGraph
 from axon.core.graph.model import GraphNode, NodeLabel, RelType
 
-
 def build_class_method_index(graph: KnowledgeGraph) -> dict[str, list[str]]:
     """Pre-build a mapping from class names to their sorted method names.
 
@@ -24,7 +23,6 @@ def build_class_method_index(graph: KnowledgeGraph) -> dict[str, list[str]]:
     for names in index.values():
         names.sort()
     return index
-
 
 def generate_text(
     node: GraphNode,
@@ -66,12 +64,6 @@ def generate_text(
     # Fallback for any unexpected label — still produce something useful.
     return _header(node)
 
-
-# ---------------------------------------------------------------------------
-# Private helpers — per-label text builders
-# ---------------------------------------------------------------------------
-
-
 def _text_for_callable(node: GraphNode, graph: KnowledgeGraph) -> str:
     """Build text for FUNCTION and METHOD nodes."""
     lines: list[str] = [_header(node)]
@@ -79,23 +71,19 @@ def _text_for_callable(node: GraphNode, graph: KnowledgeGraph) -> str:
     if node.signature:
         lines.append(f"signature: {node.signature}")
 
-    # Callees (outgoing CALLS)
     callee_names = _target_names(node.id, RelType.CALLS, graph)
     if callee_names:
         lines.append(f"calls: {', '.join(callee_names)}")
 
-    # Callers (incoming CALLS)
     caller_names = _source_names(node.id, RelType.CALLS, graph)
     if caller_names:
         lines.append(f"called by: {', '.join(caller_names)}")
 
-    # Type references (outgoing USES_TYPE)
     type_names = _target_names(node.id, RelType.USES_TYPE, graph)
     if type_names:
         lines.append(f"uses types: {', '.join(type_names)}")
 
     return "\n".join(lines)
-
 
 def _text_for_class(
     node: GraphNode,
@@ -105,7 +93,6 @@ def _text_for_class(
     """Build text for CLASS nodes."""
     lines: list[str] = [_header(node)]
 
-    # Methods belonging to this class.
     if class_method_index is not None:
         method_names = class_method_index.get(node.name, [])
     else:
@@ -113,47 +100,39 @@ def _text_for_class(
     if method_names:
         lines.append(f"methods: {', '.join(method_names)}")
 
-    # Base classes (outgoing EXTENDS)
     base_names = _target_names(node.id, RelType.EXTENDS, graph)
     if base_names:
         lines.append(f"extends: {', '.join(base_names)}")
 
-    # Interfaces (outgoing IMPLEMENTS)
     iface_names = _target_names(node.id, RelType.IMPLEMENTS, graph)
     if iface_names:
         lines.append(f"implements: {', '.join(iface_names)}")
 
     return "\n".join(lines)
 
-
 def _text_for_file(node: GraphNode, graph: KnowledgeGraph) -> str:
     """Build text for FILE nodes."""
     lines: list[str] = [_header(node)]
 
-    # Symbols defined (outgoing DEFINES)
     defined_names = _target_names(node.id, RelType.DEFINES, graph)
     if defined_names:
         lines.append(f"defines: {', '.join(defined_names)}")
 
-    # Imports (outgoing IMPORTS)
     import_names = _target_names(node.id, RelType.IMPORTS, graph)
     if import_names:
         lines.append(f"imports: {', '.join(import_names)}")
 
     return "\n".join(lines)
 
-
 def _text_for_folder(node: GraphNode, graph: KnowledgeGraph) -> str:
     """Build text for FOLDER nodes."""
     lines: list[str] = [_header(node)]
 
-    # Files contained (outgoing CONTAINS)
     child_names = _target_names(node.id, RelType.CONTAINS, graph)
     if child_names:
         lines.append(f"contains: {', '.join(child_names)}")
 
     return "\n".join(lines)
-
 
 def _text_for_type_definition(node: GraphNode, _graph: KnowledgeGraph) -> str:
     """Build text for INTERFACE, TYPE_ALIAS, and ENUM nodes."""
@@ -164,41 +143,30 @@ def _text_for_type_definition(node: GraphNode, _graph: KnowledgeGraph) -> str:
 
     return "\n".join(lines)
 
-
 def _text_for_community(node: GraphNode, graph: KnowledgeGraph) -> str:
     """Build text for COMMUNITY nodes."""
     lines: list[str] = [_header(node)]
 
-    # Members (incoming MEMBER_OF)
     member_names = _source_names(node.id, RelType.MEMBER_OF, graph)
     if member_names:
         lines.append(f"members: {', '.join(member_names)}")
 
     return "\n".join(lines)
 
-
 def _text_for_process(node: GraphNode, graph: KnowledgeGraph) -> str:
     """Build text for PROCESS nodes."""
     lines: list[str] = [_header(node)]
 
-    # Steps (incoming STEP_IN_PROCESS)
     step_names = _source_names(node.id, RelType.STEP_IN_PROCESS, graph)
     if step_names:
         lines.append(f"steps: {', '.join(step_names)}")
 
     return "\n".join(lines)
 
-
-# ---------------------------------------------------------------------------
-# Shared utilities
-# ---------------------------------------------------------------------------
-
-
 def _header(node: GraphNode) -> str:
     """Build the opening line: ``<label> <name> in <file_path>``."""
     parts: list[str] = [f"{node.label.value} {node.name}"]
 
-    # For methods, include the owning class.
     if node.label == NodeLabel.METHOD and node.class_name:
         parts.append(f"of class {node.class_name}")
 
@@ -206,7 +174,6 @@ def _header(node: GraphNode) -> str:
         parts.append(f"in {node.file_path}")
 
     return " ".join(parts)
-
 
 def _target_names(
     node_id: str, rel_type: RelType, graph: KnowledgeGraph
@@ -220,7 +187,6 @@ def _target_names(
             names.append(target.name)
     return sorted(names)
 
-
 def _source_names(
     node_id: str, rel_type: RelType, graph: KnowledgeGraph
 ) -> list[str]:
@@ -232,7 +198,6 @@ def _source_names(
         if source is not None:
             names.append(source.name)
     return sorted(names)
-
 
 def _class_method_names(class_name: str, graph: KnowledgeGraph) -> list[str]:
     """Return sorted names of METHOD nodes whose ``class_name`` matches."""

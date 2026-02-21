@@ -10,11 +10,13 @@ from __future__ import annotations
 import json
 import re
 from pathlib import Path
+from types import SimpleNamespace
 from typing import TYPE_CHECKING, Any
+
+from axon.core.search.hybrid import hybrid_search
 
 if TYPE_CHECKING:
     from axon.core.storage.base import StorageBackend
-
 
 def _resolve_symbol(storage: StorageBackend, symbol: str) -> list:
     """Resolve a symbol name to search results, preferring exact name matches."""
@@ -23,12 +25,6 @@ def _resolve_symbol(storage: StorageBackend, symbol: str) -> list:
         if results:
             return results
     return storage.fts_search(symbol, limit=1)
-
-
-# ---------------------------------------------------------------------------
-# 1. axon_list_repos
-# ---------------------------------------------------------------------------
-
 
 def handle_list_repos(registry_dir: Path | None = None) -> str:
     """List indexed repositories by scanning for .axon directories.
@@ -87,12 +83,6 @@ def handle_list_repos(registry_dir: Path | None = None) -> str:
 
     return "\n".join(lines)
 
-
-# ---------------------------------------------------------------------------
-# 2. axon_query — Hybrid search
-# ---------------------------------------------------------------------------
-
-
 def handle_query(storage: StorageBackend, query: str, limit: int = 20) -> str:
     """Execute hybrid search and format results.
 
@@ -104,8 +94,6 @@ def handle_query(storage: StorageBackend, query: str, limit: int = 20) -> str:
     Returns:
         Formatted search results with file, name, label, and snippet.
     """
-    from axon.core.search.hybrid import hybrid_search
-
     results = hybrid_search(query, storage, limit=limit)
     if not results:
         return f"No results found for '{query}'."
@@ -120,12 +108,6 @@ def handle_query(storage: StorageBackend, query: str, limit: int = 20) -> str:
     lines.append("")
     lines.append("Next: Use context() on a specific symbol for the full picture.")
     return "\n".join(lines)
-
-
-# ---------------------------------------------------------------------------
-# 3. axon_context — 360-degree symbol view
-# ---------------------------------------------------------------------------
-
 
 def handle_context(storage: StorageBackend, symbol: str) -> str:
     """Provide a 360-degree view of a symbol.
@@ -158,21 +140,18 @@ def handle_context(storage: StorageBackend, symbol: str) -> str:
     if node.is_dead:
         lines.append("Status: DEAD CODE (unreachable)")
 
-    # Callers
     callers = storage.get_callers(node.id)
     if callers:
         lines.append(f"\nCallers ({len(callers)}):")
         for c in callers:
             lines.append(f"  -> {c.name}  {c.file_path}:{c.start_line}")
 
-    # Callees
     callees = storage.get_callees(node.id)
     if callees:
         lines.append(f"\nCallees ({len(callees)}):")
         for c in callees:
             lines.append(f"  -> {c.name}  {c.file_path}:{c.start_line}")
 
-    # Type references
     type_refs = storage.get_type_refs(node.id)
     if type_refs:
         lines.append(f"\nType references ({len(type_refs)}):")
@@ -182,12 +161,6 @@ def handle_context(storage: StorageBackend, symbol: str) -> str:
     lines.append("")
     lines.append("Next: Use impact() if planning changes to this symbol.")
     return "\n".join(lines)
-
-
-# ---------------------------------------------------------------------------
-# 4. axon_impact — Blast radius analysis
-# ---------------------------------------------------------------------------
-
 
 def handle_impact(storage: StorageBackend, symbol: str, depth: int = 3) -> str:
     """Analyse the blast radius of changing a symbol.
@@ -228,12 +201,6 @@ def handle_impact(storage: StorageBackend, symbol: str, depth: int = 3) -> str:
     lines.append("Tip: Review each affected symbol before making changes.")
     return "\n".join(lines)
 
-
-# ---------------------------------------------------------------------------
-# 5. axon_dead_code — List unreachable code
-# ---------------------------------------------------------------------------
-
-
 def handle_dead_code(storage: StorageBackend) -> str:
     """List all symbols marked as dead code.
 
@@ -268,15 +235,8 @@ def handle_dead_code(storage: StorageBackend) -> str:
     lines.append("Tip: Consider removing or refactoring these symbols.")
     return "\n".join(lines)
 
-
-# ---------------------------------------------------------------------------
-# 6. axon_detect_changes — Git diff -> affected symbols
-# ---------------------------------------------------------------------------
-
-
 _DIFF_FILE_PATTERN = re.compile(r"^diff --git a/(.+?) b/(.+?)$", re.MULTILINE)
 _DIFF_HUNK_PATTERN = re.compile(r"^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@", re.MULTILINE)
-
 
 def handle_detect_changes(storage: StorageBackend, diff: str) -> str:
     """Map git diff output to affected symbols.
@@ -294,7 +254,6 @@ def handle_detect_changes(storage: StorageBackend, diff: str) -> str:
     if not diff.strip():
         return "Empty diff provided."
 
-    # Parse changed files and their modified line ranges
     changed_files: dict[str, list[tuple[int, int]]] = {}
     current_file: str | None = None
 
@@ -320,7 +279,6 @@ def handle_detect_changes(storage: StorageBackend, diff: str) -> str:
     total_affected = 0
 
     for file_path, ranges in changed_files.items():
-        # Find symbols in this file by direct Cypher query on file_path.
         affected_symbols = []
         try:
             rows = storage.execute_raw(
@@ -334,11 +292,8 @@ def handle_detect_changes(storage: StorageBackend, diff: str) -> str:
                 start_line = row[3] or 0
                 end_line = row[4] or 0
                 label_prefix = node_id.split(":", 1)[0] if node_id else ""
-                # Check if any changed range overlaps with the symbol's line range
                 for start, end in ranges:
                     if start_line <= end and end_line >= start:
-                        # Create a lightweight proxy object for display.
-                        from types import SimpleNamespace
                         sym = SimpleNamespace(
                             name=name, label=SimpleNamespace(value=label_prefix),
                             start_line=start_line, end_line=end_line,
@@ -365,18 +320,10 @@ def handle_detect_changes(storage: StorageBackend, diff: str) -> str:
     lines.append("Next: Use impact() on affected symbols to see downstream effects.")
     return "\n".join(lines)
 
-
-# ---------------------------------------------------------------------------
-# 7. axon_cypher — Raw Cypher query
-# ---------------------------------------------------------------------------
-
-
-# Keywords that indicate a write/destructive Cypher query.
 _WRITE_KEYWORDS = re.compile(
     r"\b(DELETE|DROP|CREATE|SET|REMOVE|MERGE|DETACH|INSTALL|LOAD|COPY|CALL)\b",
     re.IGNORECASE,
 )
-
 
 def handle_cypher(storage: StorageBackend, query: str) -> str:
     """Execute a raw Cypher query and return formatted results.

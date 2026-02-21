@@ -20,7 +20,6 @@ from axon.core.parsers.base import (
 
 PY_LANGUAGE = Language(tspython.language())
 
-# Built-in types to skip when extracting type references.
 _BUILTIN_TYPES: frozenset[str] = frozenset(
     {
         "str",
@@ -41,7 +40,6 @@ _BUILTIN_TYPES: frozenset[str] = frozenset(
     }
 )
 
-
 class PythonParser(LanguageParser):
     """Parses Python source code using tree-sitter."""
 
@@ -57,10 +55,6 @@ class PythonParser(LanguageParser):
         # Extract module-level calls (e.g. ``setup()`` at the top of a script).
         self._extract_calls_recursive(root, result)
         return result
-
-    # ------------------------------------------------------------------
-    # Tree walking
-    # ------------------------------------------------------------------
 
     def _walk(
         self,
@@ -94,10 +88,6 @@ class PythonParser(LanguageParser):
                 case _:
                     self._walk(child, content, result, class_name)
 
-    # ------------------------------------------------------------------
-    # Functions and methods
-    # ------------------------------------------------------------------
-
     def _extract_function(
         self,
         node: Node,
@@ -130,10 +120,8 @@ class PythonParser(LanguageParser):
             )
         )
 
-        # Extract parameter type annotations.
         self._extract_param_types(node, result)
 
-        # Extract return type annotation.
         return_type = node.child_by_field_name("return_type")
         if return_type is not None:
             type_name = self._extract_type_name(return_type)
@@ -146,8 +134,7 @@ class PythonParser(LanguageParser):
                     )
                 )
 
-        # Walk the function body for nested definitions and variable annotations.
-        # Call extraction is handled once at the module level by ``parse()``.
+        # Call extraction is handled once at module level by parse().
         body = node.child_by_field_name("body")
         if body is not None:
             # Nested functions/classes inside a function are not methods,
@@ -171,10 +158,6 @@ class PythonParser(LanguageParser):
             sig += f" -> {return_type.text.decode('utf8')}"
 
         return sig
-
-    # ------------------------------------------------------------------
-    # Decorated definitions
-    # ------------------------------------------------------------------
 
     def _extract_decorated(
         self,
@@ -210,7 +193,6 @@ class PythonParser(LanguageParser):
         else:
             self._extract_class(definition_node, content, result)
 
-        # Attach decorators to the primary symbol (first added).
         if count_before < len(result.symbols):
             result.symbols[count_before].decorators = decorators
 
@@ -234,10 +216,6 @@ class PythonParser(LanguageParser):
                     return func.text.decode("utf8")
         return ""
 
-    # ------------------------------------------------------------------
-    # Parameter types
-    # ------------------------------------------------------------------
-
     def _extract_param_types(self, func_node: Node, result: ParseResult) -> None:
         """Extract type annotations from function parameters."""
         params_node = func_node.child_by_field_name("parameters")
@@ -252,7 +230,6 @@ class PythonParser(LanguageParser):
 
     def _extract_typed_param(self, param_node: Node, result: ParseResult) -> None:
         """Extract a single typed parameter's type reference."""
-        # The parameter name is the first identifier child.
         param_name = ""
         for child in param_node.children:
             if child.type == "identifier":
@@ -273,10 +250,6 @@ class PythonParser(LanguageParser):
                     param_name=param_name,
                 )
             )
-
-    # ------------------------------------------------------------------
-    # Classes
-    # ------------------------------------------------------------------
 
     def _extract_class(
         self,
@@ -304,7 +277,6 @@ class PythonParser(LanguageParser):
             )
         )
 
-        # Extract inheritance (superclasses).
         superclasses = node.child_by_field_name("superclasses")
         if superclasses is not None:
             for child in superclasses.children:
@@ -312,14 +284,9 @@ class PythonParser(LanguageParser):
                     parent_name = child.text.decode("utf8")
                     result.heritage.append((class_name, "extends", parent_name))
 
-        # Walk into the class body to find methods and other definitions.
         body = node.child_by_field_name("body")
         if body is not None:
             self._walk(body, content, result, class_name=class_name)
-
-    # ------------------------------------------------------------------
-    # Imports
-    # ------------------------------------------------------------------
 
     def _extract_import(self, node: Node, result: ParseResult) -> None:
         """Extract a plain ``import X`` statement."""
@@ -360,7 +327,6 @@ class PythonParser(LanguageParser):
         is_relative = module_name_node.type == "relative_import"
         module = module_name_node.text.decode("utf8")
 
-        # Collect all imported names (everything after ``import``).
         names: list[str] = []
         past_import = False
         for child in node.children:
@@ -377,10 +343,6 @@ class PythonParser(LanguageParser):
                 is_relative=is_relative,
             )
         )
-
-    # ------------------------------------------------------------------
-    # Calls and variable annotations (extracted from bodies)
-    # ------------------------------------------------------------------
 
     def _extract_annotations_from_expression(
         self,
@@ -438,7 +400,6 @@ class PythonParser(LanguageParser):
         line = call_node.start_point[0] + 1
 
         if func_node.type == "identifier":
-            # Simple call: foo()
             result.calls.append(
                 CallInfo(
                     name=func_node.text.decode("utf8"),
@@ -446,7 +407,6 @@ class PythonParser(LanguageParser):
                 )
             )
         elif func_node.type == "attribute":
-            # Method/attribute call: obj.method()
             name, receiver = self._extract_attribute_call(func_node)
             result.calls.append(
                 CallInfo(
@@ -464,14 +424,12 @@ class PythonParser(LanguageParser):
         ``method2`` as the name and the first identifier in the chain as
         the receiver.
         """
-        # The last identifier child of the attribute node is the method name.
         method_name = ""
         for child in reversed(attr_node.children):
             if child.type == "identifier":
                 method_name = child.text.decode("utf8")
                 break
 
-        # The receiver is the object part (first child of attribute).
         receiver = ""
         obj_node = attr_node.children[0] if attr_node.children else None
         if obj_node is not None:
@@ -498,10 +456,6 @@ class PythonParser(LanguageParser):
                 break
         return ""
 
-    # ------------------------------------------------------------------
-    # Type name helpers
-    # ------------------------------------------------------------------
-
     @staticmethod
     def _extract_type_name(type_node: Node) -> str:
         """Extract the primary type name from a type annotation node.
@@ -510,7 +464,6 @@ class PythonParser(LanguageParser):
         For generic types like ``list[User]``, returns ``"list"``.
         For complex types, returns the text of the first identifier found.
         """
-        # The ``type`` wrapper node contains the actual type child.
         if type_node.type == "type" and type_node.children:
             inner = type_node.children[0]
             if inner.type == "identifier":

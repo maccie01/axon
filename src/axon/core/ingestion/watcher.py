@@ -16,7 +16,7 @@ import time
 from pathlib import Path
 
 from axon.config.ignore import load_gitignore, should_ignore
-from axon.config.languages import is_supported
+from axon.config.languages import get_language, is_supported
 from axon.core.ingestion.walker import FileEntry
 from axon.core.storage.base import StorageBackend
 
@@ -26,11 +26,8 @@ logger = logging.getLogger(__name__)
 GLOBAL_PHASE_INTERVAL = 30
 EMBEDDING_INTERVAL = 60
 
-
 def _read_file_entry(repo_path: Path, abs_path: Path) -> FileEntry | None:
     """Read a single file and return a FileEntry, or None on failure."""
-    from axon.config.languages import get_language
-
     try:
         content = abs_path.read_text(encoding="utf-8")
     except (UnicodeDecodeError, ValueError, OSError):
@@ -45,7 +42,6 @@ def _read_file_entry(repo_path: Path, abs_path: Path) -> FileEntry | None:
 
     relative = str(abs_path.relative_to(repo_path))
     return FileEntry(path=relative, content=content, language=language)
-
 
 def _reindex_files(
     changed_paths: list[Path],
@@ -93,7 +89,6 @@ def _reindex_files(
 
     return len(entries)
 
-
 def _run_global_phases(storage: StorageBackend, repo_path: Path) -> None:
     """Run global analysis phases (communities, processes, dead code).
 
@@ -105,7 +100,6 @@ def _run_global_phases(storage: StorageBackend, repo_path: Path) -> None:
 
     run_pipeline(repo_path, storage, full=True)
     logger.info("Global phases completed")
-
 
 async def watch_repo(
     repo_path: Path,
@@ -139,7 +133,6 @@ async def watch_repo(
         rust_timeout=500,
         stop_event=stop_event,
     ):
-        # Collect unique changed file paths.
         changed_paths: list[Path] = []
         seen: set[str] = set()
         for _change_type, path_str in changes:
@@ -150,14 +143,12 @@ async def watch_repo(
         if not changed_paths:
             continue
 
-        # File-local reindex.
         count = _reindex_files(changed_paths, repo_path, storage, gitignore)
         if count > 0:
             files_changed += count
             dirty = True
             logger.info("Reindexed %d file(s)", count)
 
-        # Check if global phases are due.
         now = time.monotonic()
         if dirty and (now - last_global) >= GLOBAL_PHASE_INTERVAL:
             logger.info("Running global analysis phases...")

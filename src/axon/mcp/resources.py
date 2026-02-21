@@ -12,7 +12,6 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from axon.core.storage.base import StorageBackend
 
-
 def get_overview(storage: StorageBackend) -> str:
     """Generate a high-level overview of the indexed codebase.
 
@@ -28,7 +27,6 @@ def get_overview(storage: StorageBackend) -> str:
     """
     lines = ["Axon Codebase Overview", "=" * 40, ""]
 
-    # Count nodes by label
     try:
         rows = storage.execute_raw(
             "MATCH (n) RETURN labels(n), count(n) ORDER BY count(n) DESC"
@@ -49,7 +47,6 @@ def get_overview(storage: StorageBackend) -> str:
 
     lines.append("")
 
-    # Count relationships
     try:
         rows = storage.execute_raw(
             "MATCH ()-[r]->() RETURN r.rel_type, count(r) ORDER BY count(r) DESC"
@@ -69,7 +66,6 @@ def get_overview(storage: StorageBackend) -> str:
         lines.append("Could not retrieve relationship counts.")
 
     return "\n".join(lines)
-
 
 def get_dead_code_list(storage: StorageBackend) -> str:
     """Generate a formatted list of all dead code in the codebase.
@@ -105,7 +101,6 @@ def get_dead_code_list(storage: StorageBackend) -> str:
         lines.append(f"    - {name} (line {start_line})")
 
     return "\n".join(lines)
-
 
 def get_schema() -> str:
     """Return a static description of the Axon knowledge graph schema.

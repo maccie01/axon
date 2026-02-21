@@ -18,12 +18,6 @@ from axon.core.graph.model import GraphNode, GraphRelationship
 
 logger = logging.getLogger(__name__)
 
-
-# ---------------------------------------------------------------------------
-# Data structures
-# ---------------------------------------------------------------------------
-
-
 @dataclass
 class StructuralDiff:
     """Result of comparing two code graphs."""
@@ -34,15 +28,8 @@ class StructuralDiff:
     added_relationships: list[GraphRelationship] = field(default_factory=list)
     removed_relationships: list[GraphRelationship] = field(default_factory=list)
 
-
 # Fields checked to determine if a node was "modified".
 _NODE_COMPARE_FIELDS = ("content", "signature", "start_line", "end_line")
-
-
-# ---------------------------------------------------------------------------
-# Pure diff logic
-# ---------------------------------------------------------------------------
-
 
 def diff_graphs(
     base_nodes: dict[str, GraphNode],
@@ -70,22 +57,18 @@ def diff_graphs(
     base_ids = set(base_nodes)
     current_ids = set(current_nodes)
 
-    # Added: in current but not base.
     for nid in current_ids - base_ids:
         result.added_nodes.append(current_nodes[nid])
 
-    # Removed: in base but not current.
     for nid in base_ids - current_ids:
         result.removed_nodes.append(base_nodes[nid])
 
-    # Modified: same ID, different content.
     for nid in base_ids & current_ids:
         base_node = base_nodes[nid]
         current_node = current_nodes[nid]
         if _node_changed(base_node, current_node):
             result.modified_nodes.append((base_node, current_node))
 
-    # Relationships: added/removed only.
     base_rel_ids = set(base_rels)
     current_rel_ids = set(current_rels)
 
@@ -97,19 +80,12 @@ def diff_graphs(
 
     return result
 
-
 def _node_changed(base: GraphNode, current: GraphNode) -> bool:
     """Return True if the two nodes differ on any comparison field."""
     for attr in _NODE_COMPARE_FIELDS:
         if getattr(base, attr) != getattr(current, attr):
             return True
     return False
-
-
-# ---------------------------------------------------------------------------
-# Git worktree orchestration
-# ---------------------------------------------------------------------------
-
 
 def diff_branches(
     repo_path: Path,
@@ -141,7 +117,6 @@ def diff_branches(
     """
     from axon.core.ingestion.pipeline import build_graph
 
-    # Parse branch range.
     if ".." in branch_range:
         parts = branch_range.split("..", 1)
         base_ref = parts[0].strip()
@@ -164,14 +139,12 @@ def diff_branches(
         current_graph = build_graph(repo_path)
         base_graph = _build_graph_for_ref(repo_path, base_ref)
 
-    # Convert to dicts for diffing (use iterators to avoid list copies).
     base_nodes = {n.id: n for n in base_graph.iter_nodes()}
     current_nodes = {n.id: n for n in current_graph.iter_nodes()}
     base_rels = {r.id: r for r in base_graph.iter_relationships()}
     current_rels = {r.id: r for r in current_graph.iter_relationships()}
 
     return diff_graphs(base_nodes, current_nodes, base_rels, current_rels)
-
 
 def _build_graph_for_ref(repo_path: Path, ref: str) -> "KnowledgeGraph":
     """Build an in-memory graph for a git ref using a temporary worktree."""
@@ -197,7 +170,6 @@ def _build_graph_for_ref(repo_path: Path, ref: str) -> "KnowledgeGraph":
         try:
             graph = build_graph(worktree_path)
         finally:
-            # Always clean up the worktree.
             try:
                 subprocess.run(
                     ["git", "worktree", "remove", "--force", str(worktree_path)],
@@ -210,12 +182,6 @@ def _build_graph_for_ref(repo_path: Path, ref: str) -> "KnowledgeGraph":
                 logger.warning("Failed to remove worktree at %s", worktree_path)
 
     return graph
-
-
-# ---------------------------------------------------------------------------
-# Formatting
-# ---------------------------------------------------------------------------
-
 
 def format_diff(diff: StructuralDiff) -> str:
     """Format a StructuralDiff as human-readable output.

@@ -300,7 +300,7 @@ def process_calls(
 
     for fpd in parse_data:
         for call in fpd.parse_result.calls:
-            if call.name in _CALL_BLOCKLIST:
+            if call.name in _CALL_BLOCKLIST and call.receiver not in ("self", "this"):
                 continue
 
             source_id = find_containing_symbol(

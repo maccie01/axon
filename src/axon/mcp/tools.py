@@ -19,6 +19,11 @@ from axon.core.storage.base import StorageBackend
 logger = logging.getLogger(__name__)
 
 MAX_TRAVERSE_DEPTH = 10
+
+
+def _escape_cypher(value: str) -> str:
+    """Escape a string for safe inclusion in a Cypher string literal."""
+    return value.replace("\\", "\\\\").replace("'", "\\'")
 _EMBED_MODEL_NAME = "BAAI/bge-small-en-v1.5"
 
 
@@ -390,7 +395,7 @@ def handle_detect_changes(storage: StorageBackend, diff: str) -> str:
         affected_symbols = []
         try:
             rows = storage.execute_raw(
-                f"MATCH (n) WHERE n.file_path = '{file_path.replace(chr(39), '')}' "
+                f"MATCH (n) WHERE n.file_path = '{_escape_cypher(file_path)}' "
                 f"AND n.start_line > 0 "
                 f"RETURN n.id, n.name, n.file_path, n.start_line, n.end_line"
             )

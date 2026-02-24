@@ -55,7 +55,7 @@ def _register_in_global_registry(meta: dict, repo_path: Path) -> None:
                 short_hash = hashlib.sha256(str(repo_path).encode()).hexdigest()[:8]
                 slug = f"{repo_name}-{short_hash}"
         except (json.JSONDecodeError, OSError):
-            pass  # Slot is broken/empty — we can claim it
+            shutil.rmtree(candidate, ignore_errors=True)  # Clean broken slot before claiming
 
     # Remove any stale entry for the same repo_path under a different slug.
     if registry_root.exists():

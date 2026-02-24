@@ -709,7 +709,7 @@ class KuzuBackend:
         assert self._conn is not None
         try:
             try:
-                self._conn.execute("MATCH (e:Embedding) DELETE e")
+                self._conn.execute("MATCH (e:Embedding) DETACH DELETE e")
             except Exception:
                 pass
 

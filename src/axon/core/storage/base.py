@@ -108,8 +108,16 @@ class StorageBackend(Protocol):
         """
         ...
 
+    def get_process_memberships(self, node_ids: list[str]) -> dict[str, str]:
+        """Return ``{node_id: process_name}`` for nodes belonging to a Process."""
+        ...
+
     def execute_raw(self, query: str) -> Any:
         """Execute a raw backend-specific query string."""
+        ...
+
+    def exact_name_search(self, name: str, limit: int = 5) -> list[SearchResult]:
+        """Search for nodes with an exact name match."""
         ...
 
     def fts_search(self, query: str, limit: int) -> list[SearchResult]:

@@ -120,8 +120,14 @@ class TestStorageBackend:
             def traverse_with_depth(self, start_id, depth, direction="callers"):
                 return []
 
+            def get_process_memberships(self, node_ids):
+                return {}
+
             def execute_raw(self, query):
                 return None
+
+            def exact_name_search(self, name, limit=5):
+                return []
 
             def fts_search(self, query, limit):
                 return []

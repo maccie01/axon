@@ -81,12 +81,30 @@ class StorageBackend(Protocol):
         """Return nodes that reference the type identified by *node_id*."""
         ...
 
+    def get_callers_with_confidence(self, node_id: str) -> list[tuple[GraphNode, float]]:
+        """Return ``(node, confidence)`` pairs for all nodes that CALL *node_id*."""
+        ...
+
+    def get_callees_with_confidence(self, node_id: str) -> list[tuple[GraphNode, float]]:
+        """Return ``(node, confidence)`` pairs for all nodes called by *node_id*."""
+        ...
+
     def traverse(self, start_id: str, depth: int, direction: str = "callers") -> list[GraphNode]:
         """Breadth-first traversal up to *depth* hops from *start_id*.
 
         Args:
             direction: ``"callers"`` follows incoming CALLS (blast radius),
                        ``"callees"`` follows outgoing CALLS (dependencies).
+        """
+        ...
+
+    def traverse_with_depth(
+        self, start_id: str, depth: int, direction: str = "callers"
+    ) -> list[tuple[GraphNode, int]]:
+        """BFS traversal returning ``(node, hop_depth)`` pairs.
+
+        Same semantics as :meth:`traverse` but preserves the hop distance
+        (1-based) so callers can group results by proximity.
         """
         ...
 

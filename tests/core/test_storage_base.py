@@ -108,7 +108,16 @@ class TestStorageBackend:
             def get_type_refs(self, node_id):
                 return []
 
+            def get_callers_with_confidence(self, node_id):
+                return []
+
+            def get_callees_with_confidence(self, node_id):
+                return []
+
             def traverse(self, start_id, depth):
+                return []
+
+            def traverse_with_depth(self, start_id, depth, direction="callers"):
                 return []
 
             def execute_raw(self, query):

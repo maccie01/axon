@@ -8,6 +8,7 @@ switching in the user's working tree.
 from __future__ import annotations
 
 import logging
+import re
 import subprocess
 import tempfile
 from concurrent.futures import ThreadPoolExecutor
@@ -151,12 +152,15 @@ def _build_graph_for_ref(repo_path: Path, ref: str) -> "KnowledgeGraph":
     from axon.core.graph.graph import KnowledgeGraph
     from axon.core.ingestion.pipeline import build_graph
 
+    if not ref or ref.startswith('-') or not re.fullmatch(r'[a-zA-Z0-9/_\-.~^@{}]+', ref):
+        raise ValueError(f"Invalid git ref: {ref!r}")
+
     with tempfile.TemporaryDirectory(prefix="axon_diff_") as tmp_dir:
         worktree_path = Path(tmp_dir) / "worktree"
 
         try:
             subprocess.run(
-                ["git", "worktree", "add", str(worktree_path), ref],
+                ["git", "worktree", "add", "--", str(worktree_path), ref],
                 cwd=repo_path,
                 capture_output=True,
                 text=True,

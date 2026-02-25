@@ -81,6 +81,7 @@ def resolve_call(
     file_path: str,
     call_index: dict[str, list[str]],
     graph: KnowledgeGraph,
+    caller_class: str = "",
 ) -> tuple[str | None, float]:
     """Resolve a call expression to a target node ID and confidence score.
 
@@ -105,6 +106,7 @@ def resolve_call(
         call_index: Mapping from symbol names to node IDs built by
             :func:`build_call_index`.
         graph: The knowledge graph.
+        caller_class: Class name of the calling symbol (for self/this resolution).
 
     Returns:
         A tuple of ``(node_id, confidence)`` or ``(None, 0.0)`` if the
@@ -114,7 +116,7 @@ def resolve_call(
     receiver = call.receiver
 
     if receiver in ("self", "this"):
-        result = _resolve_self_method(name, file_path, call_index, graph)
+        result = _resolve_self_method(name, file_path, call_index, graph, caller_class)
         if result is not None:
             return result, 1.0
 
@@ -142,12 +144,16 @@ def _resolve_self_method(
     file_path: str,
     call_index: dict[str, list[str]],
     graph: KnowledgeGraph,
+    caller_class: str = "",
 ) -> str | None:
-    """Find a method with *method_name* in the same file (same class).
+    """Find a method with *method_name* in the same file and class.
 
     When the receiver is ``self`` or ``this`` the target must be a Method
-    node defined in the same file.
+    node defined in the same file.  If *caller_class* is provided, prefer
+    a method belonging to that class.  Falls back to any same-file method
+    if no class-specific match is found.
     """
+    fallback: str | None = None
     for nid in call_index.get(method_name, []):
         node = graph.get_node(nid)
         if (
@@ -155,8 +161,11 @@ def _resolve_self_method(
             and node.label == NodeLabel.METHOD
             and node.file_path == file_path
         ):
-            return nid
-    return None
+            if caller_class and node.class_name == caller_class:
+                return nid
+            if fallback is None:
+                fallback = nid
+    return fallback
 
 def _resolve_via_imports(
     name: str,
@@ -315,8 +324,11 @@ def process_calls(
                 )
                 continue
 
+            source_node = graph.get_node(source_id)
+            caller_class = source_node.class_name if source_node else ""
+
             target_id, confidence = resolve_call(
-                call, fpd.file_path, call_index, graph
+                call, fpd.file_path, call_index, graph, caller_class
             )
             if target_id is not None:
                 _add_calls_edge(source_id, target_id, confidence, graph, seen)

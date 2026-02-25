@@ -433,7 +433,8 @@ def handle_detect_changes(storage: StorageBackend, diff: str) -> str:
     return "\n".join(lines)
 
 _WRITE_KEYWORDS = re.compile(
-    r"\b(DELETE|DROP|CREATE|SET|REMOVE|MERGE|DETACH|INSTALL|LOAD|COPY|CALL)\b",
+    r"\b(DELETE|DROP|CREATE|SET|REMOVE|MERGE|DETACH|INSTALL|LOAD|COPY)\b"
+    r"|\bCALL\s+(INSTALL|LOAD|DROP)\b",
     re.IGNORECASE,
 )
 

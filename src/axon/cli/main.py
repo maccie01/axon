@@ -326,8 +326,10 @@ def setup(
     }
 
     if claude or (not claude and not cursor):
-        console.print("[bold]Add to your Claude Code MCP config:[/bold]")
-        console.print(json.dumps({"axon": mcp_config}, indent=2))
+        console.print("[bold]Claude Code[/bold]")
+        console.print("Add to .mcp.json in your project root:")
+        console.print(json.dumps({"mcpServers": {"axon": mcp_config}}, indent=2))
+        console.print("\n[dim]Or run: claude mcp add axon -- axon serve --watch[/dim]")
 
     if cursor or (not claude and not cursor):
         console.print("[bold]Add to your Cursor MCP config:[/bold]")
@@ -416,7 +418,32 @@ def serve(
 
     if not (axon_dir / "meta.json").exists():
         print("Running initial index...", file=sys.stderr)
-        run_pipeline(repo_path, storage, full=True)
+
+        def _stderr_progress(phase: str, pct: float) -> None:
+            if pct == 0.0:
+                print(f"  {phase}...", file=sys.stderr, flush=True)
+
+        _, result = run_pipeline(repo_path, storage, full=True, progress_callback=_stderr_progress)
+
+        meta = {
+            "version": __version__,
+            "name": repo_path.name,
+            "path": str(repo_path),
+            "stats": {
+                "files": result.files,
+                "symbols": result.symbols,
+                "relationships": result.relationships,
+                "clusters": result.clusters,
+                "flows": result.processes,
+                "dead_code": result.dead_code,
+                "coupled_pairs": result.coupled_pairs,
+                "embeddings": result.embeddings,
+            },
+            "last_indexed_at": datetime.now(tz=timezone.utc).isoformat(),
+        }
+        meta_path = axon_dir / "meta.json"
+        meta_path.write_text(json.dumps(meta, indent=2) + "\n", encoding="utf-8")
+        print("  Index complete.", file=sys.stderr, flush=True)
 
     lock = asyncio.Lock()
     set_storage(storage)

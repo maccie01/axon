@@ -1,19 +1,5 @@
-/**
- * Computes convex hull outlines for community clusters.
- *
- * Given a Graphology graph and a list of communities, this module calculates
- * the convex hull polygon for each community's member nodes (based on their
- * current graph positions) and returns the hull data for rendering.
- *
- * The convex hull is computed using the Graham scan algorithm.
- */
-
 import type { AbstractGraph, Attributes } from 'graphology-types';
 import type { Community } from '@/types';
-
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
 
 export interface Point {
   x: number;
@@ -30,29 +16,11 @@ export interface HullData {
   centroid: Point;
 }
 
-// ---------------------------------------------------------------------------
-// Color palette for community hulls (12 distinct colors, will cycle)
-// ---------------------------------------------------------------------------
-
 const HULL_COLORS = [
   '#61AFEF', '#E5C07B', '#C678DD', '#98C379', '#56B6C2', '#E06C75',
   '#BE85C8', '#5EA8A0', '#D19A66', '#7EC4FF', '#E98B93', '#B0D494',
 ];
 
-// ---------------------------------------------------------------------------
-// Public API
-// ---------------------------------------------------------------------------
-
-/**
- * Compute convex hull data for each community.
- *
- * For communities with fewer than 3 positioned nodes, no hull is generated
- * (they are skipped).  Colors are assigned cyclically from `HULL_COLORS`.
- *
- * @param graph - A Graphology graph instance with positioned nodes (x, y).
- * @param communities - Array of community definitions with member node IDs.
- * @returns Array of hull data objects, one per community with enough nodes.
- */
 export function computeHulls(
   graph: AbstractGraph<Attributes, Attributes, Attributes>,
   communities: Community[],
@@ -95,15 +63,7 @@ export function computeHulls(
   return hulls;
 }
 
-// ---------------------------------------------------------------------------
 // Graham scan convex hull
-// ---------------------------------------------------------------------------
-
-/**
- * Compute the convex hull of a set of 2D points using the Graham scan.
- *
- * @returns The vertices of the convex hull in counter-clockwise order.
- */
 function convexHull(points: Point[]): Point[] {
   if (points.length < 3) return [...points];
 
@@ -153,11 +113,6 @@ function cross(o: Point, a: Point, b: Point): number {
   return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
 }
 
-// ---------------------------------------------------------------------------
-// Centroid
-// ---------------------------------------------------------------------------
-
-/** Compute the geometric centroid (average of all points) of a polygon. */
 function computeCentroid(points: Point[]): Point {
   let cx = 0;
   let cy = 0;

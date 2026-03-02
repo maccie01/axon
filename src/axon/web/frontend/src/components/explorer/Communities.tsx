@@ -5,7 +5,6 @@ import { useGraphStore } from '@/stores/graphStore';
 import type { Community } from '@/types';
 import { TypeBadge } from '@/components/shared/TypeBadge';
 
-// 12 distinct community colors, cycled for each community.
 const COMMUNITY_COLORS = [
   '#39d353',
   '#58a6ff',
@@ -150,7 +149,6 @@ function CommunityRow({
     setHighlightedNodes(new Set(community.members));
   }, [community.members, setHighlightedNodes]);
 
-  // Resolve member node details from the graph store
   const memberNodes = useMemo(() => {
     const memberSet = new Set(community.members);
     return nodes.filter((n) => memberSet.has(n.id));

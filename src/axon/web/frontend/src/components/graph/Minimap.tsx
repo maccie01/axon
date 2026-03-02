@@ -1,13 +1,3 @@
-/**
- * Minimap overlay for the graph canvas.
- *
- * Renders a 160x120px canvas in the bottom-right corner showing the full
- * graph as tiny colored dots with a green viewport rectangle. Supports
- * click-and-drag to pan the main camera.
- *
- * Toggle visibility with the `M` key (wired through useKeyboard).
- */
-
 import { useEffect, useRef, useCallback } from 'react';
 import type Sigma from 'sigma';
 
@@ -15,17 +5,10 @@ interface MinimapProps {
   sigma: Sigma;
 }
 
-/** Minimap canvas dimensions. */
 const MINIMAP_W = 160;
 const MINIMAP_H = 120;
-
-/** Padding inside the minimap so dots don't sit right at the edge. */
 const PAD = 6;
 
-/**
- * Read CSS custom property values from the document root. Falls back to
- * sensible defaults if the variable is not set.
- */
 function getCSSVar(name: string, fallback: string): string {
   if (typeof document === 'undefined') return fallback;
   const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
@@ -36,10 +19,6 @@ export function Minimap({ sigma }: MinimapProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const draggingRef = useRef(false);
 
-  /**
-   * Compute the bounding box of all graph nodes in graph-space so we can
-   * map them into the minimap coordinate system.
-   */
   const getGraphBounds = useCallback(() => {
     const graph = sigma.getGraph();
     let minX = Infinity;
@@ -56,7 +35,6 @@ export function Minimap({ sigma }: MinimapProps) {
       if (y > maxY) maxY = y;
     });
 
-    // Guard against empty graphs or single-node graphs.
     if (!isFinite(minX) || minX === maxX) {
       minX = -1;
       maxX = 1;
@@ -69,9 +47,6 @@ export function Minimap({ sigma }: MinimapProps) {
     return { minX, maxX, minY, maxY };
   }, [sigma]);
 
-  /**
-   * Map a graph-space coordinate into minimap pixel coordinates.
-   */
   const graphToMinimap = useCallback(
     (
       gx: number,
@@ -89,9 +64,6 @@ export function Minimap({ sigma }: MinimapProps) {
     [],
   );
 
-  /**
-   * Map a minimap pixel coordinate back to graph-space.
-   */
   const minimapToGraph = useCallback(
     (
       mx: number,
@@ -109,9 +81,6 @@ export function Minimap({ sigma }: MinimapProps) {
     [],
   );
 
-  /**
-   * Paint the minimap: background, node dots, and viewport rectangle.
-   */
   const paint = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -125,17 +94,14 @@ export function Minimap({ sigma }: MinimapProps) {
     const borderColor = getCSSVar('--border', '#1e2a3a');
     const accentColor = getCSSVar('--accent', '#39d353');
 
-    // Clear and fill background.
     ctx.clearRect(0, 0, MINIMAP_W, MINIMAP_H);
     ctx.fillStyle = bgColor;
     ctx.fillRect(0, 0, MINIMAP_W, MINIMAP_H);
 
-    // Draw border.
     ctx.strokeStyle = borderColor;
     ctx.lineWidth = 1;
     ctx.strokeRect(0.5, 0.5, MINIMAP_W - 1, MINIMAP_H - 1);
 
-    // Draw each node as a 2px dot with its display color.
     graph.forEachNode((id) => {
       const display = sigma.getNodeDisplayData(id);
       if (!display || display.hidden) return;
@@ -145,10 +111,8 @@ export function Minimap({ sigma }: MinimapProps) {
       ctx.fillRect(Math.round(mx) - 1, Math.round(my) - 1, 2, 2);
     });
 
-    // Compute viewport rectangle. The Sigma viewRectangle gives us the
-    // visible area in "framed graph" coordinates — but for our minimap we
-    // need graph-space coordinates. We convert the four viewport corners
-    // from viewport pixels to graph space.
+    // Convert viewport corners from viewport pixels to graph space, then to
+    // minimap coordinates to draw the visible-area rectangle.
     const dims = sigma.getDimensions();
     const topLeft = sigma.viewportToGraph({ x: 0, y: 0 });
     const bottomRight = sigma.viewportToGraph({ x: dims.width, y: dims.height });
@@ -166,9 +130,6 @@ export function Minimap({ sigma }: MinimapProps) {
     ctx.strokeRect(rectX, rectY, rectW, rectH);
   }, [sigma, getGraphBounds, graphToMinimap]);
 
-  /**
-   * Navigate the main camera to center on a minimap click position.
-   */
   const navigateTo = useCallback(
     (clientX: number, clientY: number) => {
       const canvas = canvasRef.current;
@@ -185,23 +146,17 @@ export function Minimap({ sigma }: MinimapProps) {
 
       // Convert the target graph coords to the normalized sigma camera space.
       // Sigma camera x/y is in [0,1] "framed graph" space after normalization.
-      // We use graphToViewport + viewportToFramedGraph to find the right camera pos.
       const viewportCoords = sigma.graphToViewport({ x: gx, y: gy });
       const dims = sigma.getDimensions();
 
       // The camera state x,y corresponds to the center of the viewport in
-      // framed graph space. We want to shift the camera so that (gx,gy) is
-      // at the center. Current camera shows the center at camera.x,camera.y.
-      // Offset = (viewport position of target - viewport center) converted
-      // back to camera-space delta.
+      // framed graph space. We shift the camera so that (gx,gy) lands at center.
       const currentState = camera.getState();
       const centerViewport = { x: dims.width / 2, y: dims.height / 2 };
 
-      // Delta in viewport pixels
       const dvx = viewportCoords.x - centerViewport.x;
       const dvy = viewportCoords.y - centerViewport.y;
 
-      // Convert pixel delta to graph delta using the ratio
       const ratio = sigma.getGraphToViewportRatio();
       if (ratio === 0) return;
 
@@ -216,18 +171,15 @@ export function Minimap({ sigma }: MinimapProps) {
     [sigma, getGraphBounds, minimapToGraph],
   );
 
-  // Repaint on every Sigma render cycle (camera move, graph update, etc.)
   useEffect(() => {
     const onRender = () => paint();
     sigma.on('afterRender', onRender);
-    // Paint once immediately.
     paint();
     return () => {
       sigma.off('afterRender', onRender);
     };
   }, [sigma, paint]);
 
-  // Mouse handlers for click-and-drag navigation.
   const handleMouseDown = useCallback(
     (e: React.MouseEvent<HTMLCanvasElement>) => {
       e.preventDefault();

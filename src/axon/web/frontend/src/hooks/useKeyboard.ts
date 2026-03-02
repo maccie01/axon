@@ -2,20 +2,11 @@ import { useEffect } from 'react';
 import { useViewStore } from '@/stores/viewStore';
 import { useGraphStore } from '@/stores/graphStore';
 
-/**
- * Global keyboard shortcut handler.
- *
- * Registers a single `keydown` listener on `window` and routes
- * modifier+key combos to the appropriate store actions.
- */
 export function useKeyboard() {
   useEffect(() => {
     function handler(e: KeyboardEvent) {
       const meta = e.metaKey || e.ctrlKey;
 
-      // ---------------------------------------------------------------
-      // Global shortcuts (work regardless of focus)
-      // ---------------------------------------------------------------
       if (meta && e.key === 'k') {
         e.preventDefault();
         useViewStore.getState().toggleCommandPalette();
@@ -55,9 +46,7 @@ export function useKeyboard() {
         return;
       }
 
-      // ---------------------------------------------------------------
-      // Graph shortcuts (only when focus is NOT inside an input/textarea)
-      // ---------------------------------------------------------------
+      // Skip graph shortcuts when focus is inside an input/textarea
       if (
         e.target instanceof HTMLInputElement ||
         e.target instanceof HTMLTextAreaElement
@@ -65,7 +54,7 @@ export function useKeyboard() {
         return;
       }
 
-      if (e.key === 'f') useGraphStore.getState().selectNode(null); // placeholder for fit-to-screen
+      if (e.key === 'f') useGraphStore.getState().selectNode(null);
       if (e.key === 'm') useGraphStore.getState().toggleMinimap();
       if (e.key === 'l') useGraphStore.getState().toggleHulls();
       if (e.key === '1') useViewStore.getState().setRightTab('context');

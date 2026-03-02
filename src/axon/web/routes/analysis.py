@@ -197,7 +197,6 @@ def get_health(request: Request) -> dict:
         elif comm_count <= 15:
             breakdown["modularity"] = min(100.0, round(comm_count / 15.0 * 100, 1))
         else:
-            # Diminishing returns above 15
             breakdown["modularity"] = round(max(50.0, 100.0 - (comm_count - 15) * 2), 1)
     except Exception:
         logger.warning("Health: modularity query failed", exc_info=True)
@@ -233,7 +232,6 @@ def get_health(request: Request) -> dict:
         logger.warning("Health: coverage query failed", exc_info=True)
         breakdown["coverage"] = 0.0
 
-    # Weighted composite
     weights = {
         "deadCode": 0.25,
         "coupling": 0.20,

@@ -1,21 +1,6 @@
-/**
- * Impact ripple animation for visualising blast-radius analysis on a Sigma graph.
- *
- * Applies a depth-based color cascade: the target node glows white, immediate
- * callers flash red, depth-2 nodes turn orange after 300ms, and depth-3+ nodes
- * turn yellow after 600ms.  All other nodes and edges are dimmed to near-black
- * so the blast path stands out.
- *
- * Returns a cleanup function that restores the original Sigma reducer settings.
- */
-
 import type Sigma from 'sigma';
 import type { Attributes } from 'graphology-types';
 import type { NodeDisplayData, EdgeDisplayData } from 'sigma/types';
-
-// ---------------------------------------------------------------------------
-// Configuration
-// ---------------------------------------------------------------------------
 
 export interface ImpactConfig {
   /** The node whose blast radius is being visualised. */
@@ -36,18 +21,6 @@ const DIM_NODE_COLOR = '#0a0e14';
 const DIM_EDGE_COLOR = '#0a0e14';
 const BLAST_EDGE_COLOR = '#f85149';
 
-// ---------------------------------------------------------------------------
-// Public API
-// ---------------------------------------------------------------------------
-
-/**
- * Apply the impact ripple animation to a Sigma instance.
- *
- * Nodes in the blast radius are highlighted by depth with a staggered reveal
- * (300ms between each depth tier).  All other nodes and edges are dimmed.
- *
- * @returns A cleanup function that removes the animation and refreshes Sigma.
- */
 export function applyImpactRipple(
   sigma: Sigma,
   config: ImpactConfig,
@@ -55,12 +28,9 @@ export function applyImpactRipple(
   const { targetNodeId, depthMap } = config;
   const graph = sigma.getGraph();
 
-  // Track which depth tiers have been revealed so far.
   const revealedDepths = new Set<number>();
   revealedDepths.add(1); // Depth 1 shows immediately.
 
-  // Build a set of all edges that lie on the blast path (connecting nodes in
-  // the depth map).
   const blastEdges = new Set<string>();
   graph.forEachEdge(
     (edge: string, _attrs: Attributes, source: string, target: string) => {
@@ -72,11 +42,8 @@ export function applyImpactRipple(
     },
   );
 
-  // Save the original reducers so we can restore them on cleanup.
   const originalNodeReducer = sigma.getSetting('nodeReducer');
   const originalEdgeReducer = sigma.getSetting('edgeReducer');
-
-  // -- Node reducer --------------------------------------------------------
 
   const nodeReducer = (
     node: string,
@@ -119,8 +86,6 @@ export function applyImpactRipple(
     return res;
   };
 
-  // -- Edge reducer --------------------------------------------------------
-
   const edgeReducer = (
     edge: string,
     data: Attributes,
@@ -137,12 +102,9 @@ export function applyImpactRipple(
     return res;
   };
 
-  // Apply the reducers.
   sigma.setSetting('nodeReducer', nodeReducer);
   sigma.setSetting('edgeReducer', edgeReducer);
   sigma.refresh();
-
-  // -- Staggered depth reveal ---------------------------------------------
 
   const timers: ReturnType<typeof setTimeout>[] = [];
 
@@ -161,8 +123,6 @@ export function applyImpactRipple(
       sigma.refresh();
     }, 600),
   );
-
-  // -- Cleanup function ---------------------------------------------------
 
   return () => {
     for (const timer of timers) {

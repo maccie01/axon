@@ -9,10 +9,6 @@ import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { TypeBadge } from '@/components/shared/TypeBadge';
 import { shortPath } from '@/lib/utils';
 
-// ---------------------------------------------------------------------------
-// Confidence tag
-// ---------------------------------------------------------------------------
-
 function ConfidenceTag({ confidence }: { confidence: number }) {
   if (confidence >= 0.9) return null;
   const symbol = confidence >= 0.5 ? '~' : '?';
@@ -30,10 +26,6 @@ function ConfidenceTag({ confidence }: { confidence: number }) {
     </span>
   );
 }
-
-// ---------------------------------------------------------------------------
-// Collapsible edge list (callers / callees)
-// ---------------------------------------------------------------------------
 
 function EdgeList({
   title,
@@ -131,10 +123,6 @@ function EdgeList({
   );
 }
 
-// ---------------------------------------------------------------------------
-// Type refs list
-// ---------------------------------------------------------------------------
-
 function TypeRefsList({
   typeRefs,
   onNavigate,
@@ -200,10 +188,6 @@ function TypeRefsList({
     </div>
   );
 }
-
-// ---------------------------------------------------------------------------
-// Main component
-// ---------------------------------------------------------------------------
 
 interface ContextTabProps {
   nodeId: string;

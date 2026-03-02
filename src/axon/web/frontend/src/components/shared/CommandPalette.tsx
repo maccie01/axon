@@ -7,10 +7,6 @@ import { actionApi } from '@/api/client';
 import { useSearch } from '@/hooks/useSearch';
 import type { SearchResult } from '@/types';
 
-// ---------------------------------------------------------------------------
-// Command definitions
-// ---------------------------------------------------------------------------
-
 interface PaletteCommand {
   name: string;
   description: string;
@@ -44,10 +40,6 @@ function useCommands(): PaletteCommand[] {
     },
   ];
 }
-
-// ---------------------------------------------------------------------------
-// Result item
-// ---------------------------------------------------------------------------
 
 function SearchResultItem({ result }: { result: SearchResult }) {
   return (
@@ -92,10 +84,6 @@ function SearchResultItem({ result }: { result: SearchResult }) {
     </div>
   );
 }
-
-// ---------------------------------------------------------------------------
-// CommandPalette component
-// ---------------------------------------------------------------------------
 
 export function CommandPalette() {
   const open = useViewStore((s) => s.commandPaletteOpen);
@@ -213,7 +201,6 @@ export function CommandPalette() {
               No results found.
             </Command.Empty>
 
-            {/* -- Search mode -- */}
             {!isCommandMode && searchResults.length > 0 && (
               <Command.Group heading="Symbols" forceMount>
                 {searchResults.map((result) => (
@@ -241,7 +228,6 @@ export function CommandPalette() {
               </Command.Group>
             )}
 
-            {/* -- Command mode -- */}
             {isCommandMode && (
               <Command.Group heading="Commands" forceMount>
                 {commands.map((cmd) => (
@@ -281,7 +267,6 @@ export function CommandPalette() {
         </Command>
       </div>
 
-      {/* Global styles for palette item selection */}
       <style>{`
         [data-palette-item][data-selected="true"],
         [data-palette-item][aria-selected="true"] {

@@ -7,10 +7,6 @@ import { ChevronDown, ChevronRight, Route, Highlighter } from 'lucide-react';
 import { TypeBadge } from '@/components/shared/TypeBadge';
 import { shortPath } from '@/lib/utils';
 
-// ---------------------------------------------------------------------------
-// Kind badge
-// ---------------------------------------------------------------------------
-
 function KindBadge({ kind }: { kind: string | null }) {
   const isCross = kind === 'cross';
   const color = isCross ? 'var(--purple)' : 'var(--cyan)';
@@ -34,10 +30,6 @@ function KindBadge({ kind }: { kind: string | null }) {
     </span>
   );
 }
-
-// ---------------------------------------------------------------------------
-// Process entry with expandable steps
-// ---------------------------------------------------------------------------
 
 function ProcessEntry({
   process,
@@ -175,10 +167,6 @@ function ProcessEntry({
   );
 }
 
-// ---------------------------------------------------------------------------
-// Step row
-// ---------------------------------------------------------------------------
-
 function StepRow({
   stepNumber,
   nodeId,
@@ -237,10 +225,6 @@ function StepRow({
   );
 }
 
-// ---------------------------------------------------------------------------
-// Main component
-// ---------------------------------------------------------------------------
-
 interface ProcessesTabProps {
   nodeId: string;
 }
@@ -254,7 +238,6 @@ export function ProcessesTab({ nodeId }: ProcessesTabProps) {
 
   const [error, setError] = useState<string | null>(null);
 
-  // Build a quick-lookup map from graphStore nodes
   const nodeMap = useMemo(() => {
     const map = new Map<string, { name: string; label: string; filePath: string; startLine: number }>();
     for (const n of graphNodes) {
@@ -263,7 +246,6 @@ export function ProcessesTab({ nodeId }: ProcessesTabProps) {
     return map;
   }, [graphNodes]);
 
-  // Fetch all processes if not already loaded
   const fetchProcesses = useCallback(async () => {
     if (allProcesses) return;
     setLoading('processes', true);
@@ -282,7 +264,6 @@ export function ProcessesTab({ nodeId }: ProcessesTabProps) {
     void fetchProcesses();
   }, [fetchProcesses]);
 
-  // Filter processes that involve the selected node
   const { relevantProcesses, crossProcesses, intraProcesses } = useMemo(() => {
     const relevant = (allProcesses ?? []).filter((p: Process) =>
       p.steps.some((s) => s.nodeId === nodeId),

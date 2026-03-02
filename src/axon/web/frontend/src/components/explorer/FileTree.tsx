@@ -6,7 +6,6 @@ import type { FolderNode } from '@/types';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { EmptyState } from '@/components/shared/EmptyState';
 
-/** Map language names to CSS variable colors. */
 const LANGUAGE_COLOR: Record<string, string> = {
   typescript: 'var(--info)',
   javascript: 'var(--warning)',
@@ -156,12 +155,10 @@ function TreeNode({ node, depth }: { node: FolderNode; depth: number }) {
   const handleClick = useCallback(() => {
     if (isFolder) {
       setExpanded((prev) => !prev);
-      // Highlight all nodes under this folder path.
       const prefix = node.path.endsWith('/') ? node.path : node.path + '/';
       const ids = new Set(
         nodes.filter((n) => n.filePath?.startsWith(prefix)).map((n) => n.id),
       );
-      // Toggle: if already highlighting the same set, clear it.
       if (ids.size > 0 && highlightedNodeIds.size === ids.size) {
         const allMatch = [...ids].every((id) => highlightedNodeIds.has(id));
         if (allMatch) {
@@ -174,11 +171,9 @@ function TreeNode({ node, depth }: { node: FolderNode; depth: number }) {
         setHighlightedNodes(ids);
       }
     } else {
-      // Highlight all nodes in this file.
       const ids = new Set(
         nodes.filter((n) => n.filePath === node.path).map((n) => n.id),
       );
-      // Toggle: if already highlighting the same set, clear it.
       if (ids.size > 0 && highlightedNodeIds.size === ids.size) {
         const allMatch = [...ids].every((id) => highlightedNodeIds.has(id));
         if (allMatch) {
@@ -193,7 +188,6 @@ function TreeNode({ node, depth }: { node: FolderNode; depth: number }) {
     }
   }, [isFolder, selectNode, setHighlightedNodes, highlightedNodeIds, nodes, node.path]);
 
-  // For file nodes, find symbols from the graph store matching this file path
   const fileSymbols = useMemo(() => {
     if (isFolder) return [];
     return nodes.filter((n) => n.filePath === node.path);
@@ -234,7 +228,6 @@ function TreeNode({ node, depth }: { node: FolderNode; depth: number }) {
           </>
         ) : (
           <>
-            {/* Spacer for alignment with folder chevrons */}
             {fileSymbols.length > 0 ? (
               <span
                 onClick={(e) => {
@@ -252,7 +245,6 @@ function TreeNode({ node, depth }: { node: FolderNode; depth: number }) {
             ) : (
               <span style={{ width: 12, flexShrink: 0 }} />
             )}
-            {/* Colored dot by language */}
             <span
               style={{
                 width: 6,

@@ -32,7 +32,6 @@ export function QueryEditor({ value, onChange, onExecute, loading }: QueryEditor
 
   return (
     <div className="flex flex-col h-full">
-      {/* Editor area */}
       <div className="flex-1 min-h-0">
         <textarea
           ref={textareaRef}
@@ -54,7 +53,6 @@ export function QueryEditor({ value, onChange, onExecute, loading }: QueryEditor
         />
       </div>
 
-      {/* Toolbar */}
       <div
         className="flex items-center gap-2 py-2 shrink-0"
       >

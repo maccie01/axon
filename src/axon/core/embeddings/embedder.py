@@ -106,7 +106,7 @@ def embed_graph(
     class_method_idx = build_class_method_index(graph)
 
     texts: list[str] = []
-    nodes: list = []
+    nodes = []
     for node in all_nodes:
         text = generate_text(node, graph, class_method_idx)
         if text and text.strip():

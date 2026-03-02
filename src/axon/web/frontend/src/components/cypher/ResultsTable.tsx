@@ -115,7 +115,6 @@ export function ResultsTable({ result, error }: ResultsTableProps) {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Table */}
       <div className="flex-1 min-h-0 overflow-auto">
         <table
           className="w-full"
@@ -186,7 +185,6 @@ export function ResultsTable({ result, error }: ResultsTableProps) {
         </table>
       </div>
 
-      {/* Footer */}
       <div
         className="flex items-center justify-between px-3 py-1.5 shrink-0"
         style={{

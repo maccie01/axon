@@ -1,10 +1,3 @@
-/**
- * Converts raw API graph data into a Graphology instance for Sigma.js rendering.
- *
- * Assigns visual attributes (color, size, position) to each node and edge so
- * that Sigma can render the graph without additional processing.
- */
-
 import { MultiDirectedGraph } from 'graphology';
 import type { GraphNode, GraphEdge, NodeLabel } from '@/types';
 
@@ -25,19 +18,6 @@ const DEFAULT_NODE_FILL = '#4a5a6a';
 const DEFAULT_NODE_BORDER = '#5a6a7a';
 const DEFAULT_EDGE_COLOR = '#2a3a4d';
 
-/**
- * Build a Graphology MultiDirectedGraph from raw API node/edge arrays.
- *
- * Nodes receive random initial positions (ForceAtlas2 will reposition them),
- * colors based on their label, and sizes based on their degree.
- *
- * Edges that reference missing nodes or duplicate keys are silently skipped
- * to tolerate inconsistent backend data.
- *
- * @param nodes - Array of graph nodes from the API.
- * @param edges - Array of graph edges from the API.
- * @returns A fully-attributed Graphology graph ready for Sigma.
- */
 export function buildGraphology(nodes: GraphNode[], edges: GraphEdge[]): MultiDirectedGraph {
   const graph = new MultiDirectedGraph();
 
@@ -78,12 +58,11 @@ export function buildGraphology(nodes: GraphNode[], edges: GraphEdge[]): MultiDi
         stepNumber: edge.stepNumber,
       });
     } catch {
-      // Skip duplicate edge keys silently.
+      // Skip duplicate edge keys
     }
   }
 
-  // Assign node sizes: base 3, scaled by degree with gentle curve.
-  // Classes/interfaces get a slight boost for visual hierarchy.
+  // Scale node sizes by degree; classes/interfaces get a slight boost
   graph.forEachNode((id, attrs) => {
     const degree = graph.degree(id);
     const nodeType = attrs.nodeType as string;

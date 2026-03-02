@@ -12,7 +12,6 @@ export function StatusBar() {
   const deadCount = deadCode?.total ?? 0;
   const health = healthScore?.score ?? null;
 
-  // Detect primary language from overview
   const language = overview?.nodesByLabel
     ? Object.keys(overview.nodesByLabel).find(
         (k) => !['File', 'Folder', 'Community', 'Process'].includes(k),

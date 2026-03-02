@@ -1,8 +1,3 @@
-/**
- * React error boundary that catches render errors and shows a friendly
- * terminal-styled error screen with a retry button.
- */
-
 import { Component } from 'react';
 import type { ErrorInfo, ReactNode } from 'react';
 
@@ -26,7 +21,6 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   componentDidCatch(error: Error, info: ErrorInfo): void {
-    // Log to console for debugging; could be replaced with a telemetry call.
     console.error('[ErrorBoundary]', error, info.componentStack);
   }
 

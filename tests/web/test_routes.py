@@ -1,9 +1,3 @@
-"""Tests for Axon Web API route handlers.
-
-All tests mock the storage backend to avoid needing a real KuzuDB database.
-Each route handler is tested for expected response shape and error paths.
-"""
-
 from __future__ import annotations
 
 from pathlib import Path
@@ -20,11 +14,6 @@ from axon.core.graph.model import (
     NodeLabel,
     RelType,
 )
-
-
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
 
 
 def _make_app(
@@ -101,11 +90,6 @@ def _sample_edge(
     )
 
 
-# ---------------------------------------------------------------------------
-# Fixtures
-# ---------------------------------------------------------------------------
-
-
 @pytest.fixture
 def mock_storage() -> MagicMock:
     """Create a MagicMock that mimics StorageBackend with sane defaults."""
@@ -141,14 +125,7 @@ def client_with_repo(mock_storage: MagicMock, tmp_path: Path) -> TestClient:
     return TestClient(app)
 
 
-# ---------------------------------------------------------------------------
-# GET /graph
-# ---------------------------------------------------------------------------
-
-
 class TestGraphEndpoint:
-    """Tests for GET /graph — full graph serialization."""
-
     def test_empty_graph(self, client: TestClient) -> None:
         response = client.get("/graph")
         assert response.status_code == 200
@@ -210,14 +187,7 @@ class TestGraphEndpoint:
         assert response.status_code == 500
 
 
-# ---------------------------------------------------------------------------
-# GET /overview
-# ---------------------------------------------------------------------------
-
-
 class TestOverviewEndpoint:
-    """Tests for GET /overview — aggregate node/edge counts."""
-
     def test_empty_overview(self, client: TestClient) -> None:
         response = client.get("/overview")
         assert response.status_code == 200
@@ -247,14 +217,7 @@ class TestOverviewEndpoint:
         assert data["edgesByType"]["calls"] == 100
 
 
-# ---------------------------------------------------------------------------
-# GET /node/{node_id}
-# ---------------------------------------------------------------------------
-
-
 class TestNodeEndpoint:
-    """Tests for GET /node/{node_id} — single node with context."""
-
     def test_node_not_found(self, client: TestClient) -> None:
         response = client.get("/node/nonexistent:id")
         assert response.status_code == 404
@@ -307,14 +270,7 @@ class TestNodeEndpoint:
         assert "processMemberships" in data
 
 
-# ---------------------------------------------------------------------------
-# POST /search
-# ---------------------------------------------------------------------------
-
-
 class TestSearchEndpoint:
-    """Tests for POST /search — hybrid search."""
-
     def test_search_returns_results(
         self, mock_storage: MagicMock, client: TestClient
     ) -> None:
@@ -378,14 +334,7 @@ class TestSearchEndpoint:
         assert response.status_code == 500
 
 
-# ---------------------------------------------------------------------------
-# GET /dead-code
-# ---------------------------------------------------------------------------
-
-
 class TestDeadCodeEndpoint:
-    """Tests for GET /dead-code — dead code listing grouped by file."""
-
     def test_no_dead_code(self, client: TestClient) -> None:
         response = client.get("/dead-code")
         assert response.status_code == 200
@@ -418,14 +367,7 @@ class TestDeadCodeEndpoint:
         assert response.status_code == 500
 
 
-# ---------------------------------------------------------------------------
-# GET /coupling
-# ---------------------------------------------------------------------------
-
-
 class TestCouplingEndpoint:
-    """Tests for GET /coupling — temporal coupling pairs."""
-
     def test_no_coupling(self, client: TestClient) -> None:
         response = client.get("/coupling")
         assert response.status_code == 200
@@ -451,14 +393,7 @@ class TestCouplingEndpoint:
         assert pair["coChanges"] == 12
 
 
-# ---------------------------------------------------------------------------
-# GET /health
-# ---------------------------------------------------------------------------
-
-
 class TestHealthEndpoint:
-    """Tests for GET /health — composite codebase health score."""
-
     def test_health_returns_score_and_breakdown(
         self, mock_storage: MagicMock, client: TestClient
     ) -> None:
@@ -491,7 +426,6 @@ class TestHealthEndpoint:
         assert breakdown["coupling"] == 100.0  # no high coupling
 
     def test_health_handles_empty_db(self, client: TestClient) -> None:
-        """Health endpoint gracefully handles empty database (all defaults)."""
         response = client.get("/health")
         assert response.status_code == 200
         data = response.json()
@@ -499,14 +433,7 @@ class TestHealthEndpoint:
         assert "breakdown" in data
 
 
-# ---------------------------------------------------------------------------
-# GET /communities
-# ---------------------------------------------------------------------------
-
-
 class TestCommunitiesEndpoint:
-    """Tests for GET /communities — community clusters."""
-
     def test_no_communities(self, client: TestClient) -> None:
         response = client.get("/communities")
         assert response.status_code == 200
@@ -533,14 +460,7 @@ class TestCommunitiesEndpoint:
         assert len(comm["members"]) == 2
 
 
-# ---------------------------------------------------------------------------
-# GET /processes
-# ---------------------------------------------------------------------------
-
-
 class TestProcessesEndpoint:
-    """Tests for GET /processes — execution processes with steps."""
-
     def test_no_processes(self, client: TestClient) -> None:
         response = client.get("/processes")
         assert response.status_code == 200
@@ -569,14 +489,7 @@ class TestProcessesEndpoint:
         assert proc["steps"][0]["stepNumber"] == 1
 
 
-# ---------------------------------------------------------------------------
-# POST /cypher
-# ---------------------------------------------------------------------------
-
-
 class TestCypherEndpoint:
-    """Tests for POST /cypher — read-only Cypher query execution."""
-
     def test_valid_query(
         self, mock_storage: MagicMock, client: TestClient
     ) -> None:
@@ -679,14 +592,12 @@ class TestCypherEndpoint:
         assert response.status_code == 400
 
     def test_write_keyword_in_comment_allowed(self, client: TestClient) -> None:
-        """Write keywords inside comments should not trigger the block."""
         mock_storage = client.app.state.storage
         mock_storage.execute_raw.return_value = [["ok"]]
         response = client.post("/cypher", json={"query": "MATCH (n) /* CREATE */ RETURN n"})
         assert response.status_code == 200
 
     def test_write_keyword_outside_comment_blocked(self, client: TestClient) -> None:
-        """Write keywords outside comments should be blocked even with comments present."""
         response = client.post("/cypher", json={"query": "/* harmless */ CREATE (n:Test)"})
         assert response.status_code == 400
 
@@ -731,14 +642,7 @@ class TestCypherEndpoint:
         assert "name" in data["columns"]
 
 
-# ---------------------------------------------------------------------------
-# GET /tree
-# ---------------------------------------------------------------------------
-
-
 class TestTreeEndpoint:
-    """Tests for GET /tree — file tree."""
-
     def test_empty_tree(self, client: TestClient) -> None:
         response = client.get("/tree")
         assert response.status_code == 200
@@ -775,16 +679,8 @@ class TestTreeEndpoint:
         assert "children" in src_folder
 
 
-# ---------------------------------------------------------------------------
-# GET /file
-# ---------------------------------------------------------------------------
-
-
 class TestFileEndpoint:
-    """Tests for GET /file?path=... — file content."""
-
     def test_no_repo_path(self, client: TestClient) -> None:
-        """Returns 400 when no repo_path is configured."""
         response = client.get("/file?path=src/app.py")
         assert response.status_code == 400
         assert "repo_path" in response.json()["detail"].lower()
@@ -825,14 +721,7 @@ class TestFileEndpoint:
         assert "traversal" in response.json()["detail"].lower()
 
 
-# ---------------------------------------------------------------------------
-# POST /diff
-# ---------------------------------------------------------------------------
-
-
 class TestDiffEndpoint:
-    """Tests for POST /diff — branch comparison."""
-
     def test_no_repo_path(self, client: TestClient) -> None:
         response = client.post("/diff", json={"base": "main", "compare": "feature"})
         assert response.status_code == 400
@@ -879,7 +768,6 @@ class TestDiffEndpoint:
     def test_diff_with_modified_nodes(
         self, mock_storage: MagicMock, tmp_path: Path
     ) -> None:
-        """Modified nodes should serialize with before/after keys."""
         from dataclasses import dataclass, field as dc_field
 
         base_node = _sample_node(
@@ -935,23 +823,14 @@ class TestDiffEndpoint:
         assert response.status_code == 400
 
 
-# ---------------------------------------------------------------------------
-# POST /reindex
-# ---------------------------------------------------------------------------
-
-
 class TestReindexEndpoint:
-    """Tests for POST /reindex — trigger background reindex."""
-
     def test_reindex_no_repo_path(self, client: TestClient) -> None:
-        """Returns 400 when no repo_path is configured."""
         response = client.post("/reindex")
         assert response.status_code == 400
 
     def test_reindex_not_in_watch_mode(
         self, mock_storage: MagicMock
     ) -> None:
-        """Returns 400 when not in watch mode."""
         app = _make_app(mock_storage, repo_path=Path("/tmp/fake"), watch=False)
         client = TestClient(app)
         response = client.post("/reindex")
@@ -959,7 +838,6 @@ class TestReindexEndpoint:
         assert "watch" in response.json()["detail"].lower()
 
     def test_reindex_success(self, client_with_repo: TestClient) -> None:
-        """Returns started status when in watch mode with repo_path."""
         with patch("axon.web.routes.analysis.run_pipeline"):
             response = client_with_repo.post("/reindex")
 
@@ -968,14 +846,7 @@ class TestReindexEndpoint:
         assert data["status"] == "started"
 
 
-# ---------------------------------------------------------------------------
-# GET /impact/{node_id}
-# ---------------------------------------------------------------------------
-
-
 class TestImpactEndpoint:
-    """Tests for GET /impact/{node_id} — blast radius analysis."""
-
     def test_node_not_found(self, client: TestClient) -> None:
         response = client.get("/impact/nonexistent:id")
         assert response.status_code == 404
@@ -1003,16 +874,8 @@ class TestImpactEndpoint:
         assert data["target"]["name"] == "main"
 
 
-# ---------------------------------------------------------------------------
-# GET /events
-# ---------------------------------------------------------------------------
-
-
 class TestEventsEndpoint:
-    """Tests for GET /events — SSE endpoint."""
-
     def test_events_endpoint_exists(self, client: TestClient) -> None:
-        """The /events endpoint should be registered and respond."""
         # SSE endpoints return a streaming response. With no event_queue
         # (non-watch mode), the generator exits immediately.
         response = client.get("/events")

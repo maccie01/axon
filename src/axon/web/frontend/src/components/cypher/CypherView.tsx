@@ -36,12 +36,10 @@ export function CypherView() {
 
   return (
     <div className="flex h-full">
-      {/* Left half: editor + results */}
       <div
         className="flex flex-col h-full"
         style={{ width: '50%', minWidth: 0 }}
       >
-        {/* Query editor (top) */}
         <div
           className="shrink-0 p-2"
           style={{
@@ -57,13 +55,11 @@ export function CypherView() {
           />
         </div>
 
-        {/* Results table (bottom) */}
         <div className="flex-1 min-h-0">
           <ResultsTable result={cypherResult} error={error} />
         </div>
       </div>
 
-      {/* Vertical divider */}
       <div
         style={{
           width: 1,
@@ -72,7 +68,6 @@ export function CypherView() {
         }}
       />
 
-      {/* Right half: graph preview placeholder */}
       <div
         className="flex items-center justify-center"
         style={{ width: '50%', minWidth: 0 }}

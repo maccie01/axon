@@ -8,10 +8,6 @@ import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { TypeBadge } from '@/components/shared/TypeBadge';
 import { shortPath } from '@/lib/utils';
 
-// ---------------------------------------------------------------------------
-// Depth section styling
-// ---------------------------------------------------------------------------
-
 interface DepthConfig {
   label: string;
   borderColor: string;
@@ -22,10 +18,6 @@ function getDepthConfig(depth: number): DepthConfig {
   if (depth === 2) return { label: 'Indirect (may break)', borderColor: 'var(--orange)' };
   return { label: 'Transitive (review)', borderColor: 'var(--yellow)' };
 }
-
-// ---------------------------------------------------------------------------
-// Collapsible depth section
-// ---------------------------------------------------------------------------
 
 function DepthSection({
   depth,
@@ -131,10 +123,6 @@ function DepthSection({
   );
 }
 
-// ---------------------------------------------------------------------------
-// Main component
-// ---------------------------------------------------------------------------
-
 interface ImpactTabProps {
   nodeId: string;
 }
@@ -189,7 +177,6 @@ export function ImpactTab({ nodeId }: ImpactTabProps) {
       }
     }
     setBlastRadius(map);
-    // Also highlight all affected nodes
     setHighlightedNodes(new Set(map.keys()));
   }, [impactResult, setBlastRadius, setHighlightedNodes]);
 
@@ -211,7 +198,6 @@ export function ImpactTab({ nodeId }: ImpactTabProps) {
 
   if (!impactResult) return null;
 
-  // Sort depth keys numerically
   const depthKeys = Object.keys(impactResult.depths)
     .map((k) => parseInt(k, 10))
     .sort((a, b) => a - b);

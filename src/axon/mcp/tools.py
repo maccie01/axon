@@ -22,8 +22,6 @@ logger = logging.getLogger(__name__)
 
 MAX_TRAVERSE_DEPTH = 10
 
-# Regex to validate file paths before interpolating into Cypher queries.
-# Allows alphanumeric characters, dots, slashes, hyphens, underscores, and spaces.
 _SAFE_PATH = re.compile(r"^[a-zA-Z0-9._/\-\s]+$")
 
 

@@ -2,33 +2,23 @@ import { create } from 'zustand';
 import type { GraphNode, GraphEdge, Community, OverviewStats, DiffOverlay } from '@/types';
 
 interface GraphStore {
-  // Data
   nodes: GraphNode[];
   edges: GraphEdge[];
   communities: Community[];
   overview: OverviewStats | null;
-
-  // Selection
   selectedNodeId: string | null;
   hoveredNodeId: string | null;
-
-  // Visual overlays
   highlightedNodeIds: Set<string>;
   blastRadiusNodes: Map<string, number>;
   flowTraceNodeIds: string[];
   diffOverlay: DiffOverlay | null;
-
-  // Filters
   visibleNodeTypes: Set<string>;
   visibleEdgeTypes: Set<string>;
   depthLimit: number | null;
   layoutMode: 'force' | 'tree' | 'radial' | 'community' | 'circular';
-
-  // Display toggles
   hullsVisible: boolean;
   minimapVisible: boolean;
 
-  // Actions
   setGraphData: (nodes: GraphNode[], edges: GraphEdge[]) => void;
   setCommunities: (communities: Community[]) => void;
   setOverview: (overview: OverviewStats) => void;
@@ -49,33 +39,23 @@ interface GraphStore {
 }
 
 export const useGraphStore = create<GraphStore>((set) => ({
-  // Data
   nodes: [],
   edges: [],
   communities: [],
   overview: null,
-
-  // Selection
   selectedNodeId: null,
   hoveredNodeId: null,
-
-  // Visual overlays
   highlightedNodeIds: new Set(),
   blastRadiusNodes: new Map(),
   flowTraceNodeIds: [],
   diffOverlay: null,
-
-  // Filters — default: show code symbols + calls/imports
   visibleNodeTypes: new Set(['function', 'class', 'method', 'interface']),
   visibleEdgeTypes: new Set(['calls', 'imports']),
   depthLimit: null,
   layoutMode: 'force',
-
-  // Display toggles
   hullsVisible: false,
   minimapVisible: false,
 
-  // Actions
   setGraphData: (nodes, edges) => set({ nodes, edges }),
   setCommunities: (communities) => set({ communities }),
   setOverview: (overview) => set({ overview }),

@@ -91,7 +91,6 @@ export function BranchDiff() {
   const handleOpenInExplorer = useCallback(() => {
     if (!result) return;
     setActiveView('explorer');
-    // Set diff overlay on graph store
     const added = new Set(result.added.map((n) => n.id));
     const removed = new Set(result.removed.map((n) => n.id));
     const modified = new Set(result.modified.map((m) => m.after.id));
@@ -283,10 +282,6 @@ export function BranchDiff() {
     </div>
   );
 }
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
 
 function Section({
   title,

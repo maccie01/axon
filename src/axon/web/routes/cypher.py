@@ -28,7 +28,6 @@ def _extract_return_columns(query: str) -> list[str]:
     Handles aliases (``AS name``), dotted properties (``n.name``), and
     function calls (``count(n)``).
     """
-    # Find the RETURN clause (last one if multiple)
     match = re.search(r"\bRETURN\b\s+(.*?)(?:\bORDER\b|\bLIMIT\b|\bSKIP\b|$)", query, re.IGNORECASE | re.DOTALL)
     if not match:
         return []

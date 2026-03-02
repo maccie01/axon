@@ -5,13 +5,11 @@ interface CouplingHeatmapProps {
   pairs: CouplingPair[];
 }
 
-/** Shorten a full file path to just the filename. */
 function shortName(path: string): string {
   const parts = path.split('/');
   return parts[parts.length - 1] ?? path;
 }
 
-/** Resolve a CSS variable value from the document. */
 function cssVar(name: string): string {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 }
@@ -32,7 +30,6 @@ export function CouplingHeatmap({ pairs }: CouplingHeatmapProps) {
     y: 0,
     text: '',
   });
-  // Build matrix data
   const { files, matrix, pairMap, totalUniqueFiles } = useMemo(() => buildMatrix(pairs), [pairs]);
 
   const truncated = files.length < totalUniqueFiles;
@@ -60,17 +57,14 @@ export function CouplingHeatmap({ pairs }: CouplingHeatmapProps) {
     canvas.style.height = `${totalHeight}px`;
     ctx.scale(dpr, dpr);
 
-    // Colors
     const bgColor = cssVar('--bg-surface');
     const borderColor = cssVar('--border');
     const textSecondary = cssVar('--text-secondary');
     const warningColor = cssVar('--warning');
 
-    // Background
     ctx.fillStyle = bgColor;
     ctx.fillRect(0, 0, totalWidth, totalHeight);
 
-    // Column labels (rotated)
     ctx.save();
     ctx.font = '9px JetBrains Mono, monospace';
     ctx.fillStyle = textSecondary;
@@ -87,7 +81,6 @@ export function CouplingHeatmap({ pairs }: CouplingHeatmapProps) {
     }
     ctx.restore();
 
-    // Row labels
     ctx.font = '9px JetBrains Mono, monospace';
     ctx.fillStyle = textSecondary;
     ctx.textAlign = 'right';
@@ -102,13 +95,11 @@ export function CouplingHeatmap({ pairs }: CouplingHeatmapProps) {
       );
     }
 
-    // Cells
     for (let row = 0; row < files.length; row++) {
       for (let col = 0; col < files.length; col++) {
         const x = labelWidth + col * cellSize;
         const y = labelWidth + row * cellSize;
 
-        // Grid lines
         ctx.strokeStyle = borderColor;
         ctx.lineWidth = 0.5;
         ctx.strokeRect(x, y, cellSize, cellSize);
@@ -251,10 +242,6 @@ export function CouplingHeatmap({ pairs }: CouplingHeatmapProps) {
   );
 }
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
 function pairKey(a: string, b: string): string {
   return a < b ? `${a}||${b}` : `${b}||${a}`;
 }
@@ -278,7 +265,6 @@ function buildMatrix(pairs: CouplingPair[]): {
     return { files: [], matrix: [], pairMap: new Map(), totalUniqueFiles: 0 };
   }
 
-  // Collect unique files
   let allFiles = getUniqueFiles(pairs);
   const totalUniqueFiles = allFiles.length;
 

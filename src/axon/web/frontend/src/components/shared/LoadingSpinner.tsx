@@ -1,12 +1,4 @@
-/**
- * Pulsing green dot loading indicator.
- *
- * Shows an animated 8px dot that pulses in scale and opacity, paired with
- * a monospace message string. Designed to center within its parent container.
- */
-
 interface LoadingSpinnerProps {
-  /** Text shown beside the pulsing dot. Defaults to "Loading..." */
   message?: string;
 }
 
@@ -44,8 +36,6 @@ export function LoadingSpinner({ message = 'Loading...' }: LoadingSpinnerProps) 
         {message}
       </span>
 
-      {/* Scoped keyframes — injected once via a <style> tag. React deduplicates
-          identical <style> children so this is safe to render multiple times. */}
       <style>{`
         @keyframes axon-pulse {
           0%, 100% { transform: scale(0.8); opacity: 0.5; }

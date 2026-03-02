@@ -1,5 +1,3 @@
-/** Shared constants for the Axon Web UI. */
-
 export interface PresetQuery {
   label: string;
   query: string;
@@ -43,8 +41,5 @@ export const PRESET_QUERIES: PresetQuery[] = [
   },
 ];
 
-/** Number of rows to display per page in query results. */
 export const RESULTS_PAGE_SIZE = 50;
-
-/** Maximum entries stored in cypher history. */
 export const MAX_HISTORY_ENTRIES = 20;

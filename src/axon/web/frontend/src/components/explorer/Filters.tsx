@@ -1,9 +1,5 @@
 import { useGraphStore } from '@/stores/graphStore';
 
-// ---------------------------------------------------------------------------
-// Node type definitions with colors
-// ---------------------------------------------------------------------------
-
 const NODE_TYPE_CONFIG: { type: string; label: string; color: string }[] = [
   { type: 'function', label: 'Function', color: 'var(--node-function)' },
   { type: 'class', label: 'Class', color: 'var(--node-class)' },
@@ -55,7 +51,6 @@ export function Filters() {
 
   return (
     <div style={{ padding: 8, display: 'flex', flexDirection: 'column', gap: 12 }}>
-      {/* Node type toggles */}
       <Section title="Node Types">
         {NODE_TYPE_CONFIG.map((cfg) => (
           <ToggleRow
@@ -68,7 +63,6 @@ export function Filters() {
         ))}
       </Section>
 
-      {/* Edge type toggles */}
       <Section title="Edge Types">
         {EDGE_TYPE_CONFIG.map((cfg) => (
           <ToggleRow
@@ -80,7 +74,6 @@ export function Filters() {
         ))}
       </Section>
 
-      {/* Depth control */}
       <Section title="Depth Limit">
         {!selectedNodeId && (
           <div style={{ color: 'var(--text-dimmed)', fontSize: 10, marginBottom: 4 }}>
@@ -119,7 +112,6 @@ export function Filters() {
         </div>
       </Section>
 
-      {/* Layout selector */}
       <Section title="Layout">
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
           {LAYOUT_OPTIONS.map((opt) => {
@@ -150,10 +142,6 @@ export function Filters() {
     </div>
   );
 }
-
-// ---------------------------------------------------------------------------
-// Sub-components
-// ---------------------------------------------------------------------------
 
 function Section({
   title,
@@ -213,7 +201,6 @@ function ToggleRow({
         e.currentTarget.style.background = 'transparent';
       }}
     >
-      {/* Colored dot (only for node types) */}
       {color && (
         <span
           style={{
@@ -226,10 +213,8 @@ function ToggleRow({
         />
       )}
 
-      {/* Label */}
       <span style={{ flex: 1 }}>{label}</span>
 
-      {/* Checkbox indicator */}
       <span
         style={{
           width: 12,

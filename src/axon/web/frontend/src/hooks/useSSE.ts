@@ -1,24 +1,8 @@
-/**
- * Server-Sent Events hook for live graph reload.
- *
- * Opens an EventSource connection to `/api/events` and listens for reindex
- * lifecycle events.  When a `reindex_complete` event fires, the hook fetches
- * fresh graph data *and* analysis data from the API and pushes them into the
- * Zustand stores, causing the UI to re-render with updated data.
- *
- * Reconnects automatically after a 5-second delay on connection errors.
- */
-
 import { useEffect, useRef } from 'react';
 import { analysisApi, graphApi } from '@/api/client';
 import { useGraphStore } from '@/stores/graphStore';
 import { useDataStore } from '@/stores/dataStore';
 
-/**
- * Subscribe to backend SSE events and auto-refresh all data on reindex.
- *
- * Should be called once at the application root (e.g. inside `<App />`).
- */
 export function useSSE(): void {
   const sourceRef = useRef<EventSource | null>(null);
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -35,7 +19,6 @@ export function useSSE(): void {
       sourceRef.current = source;
 
       source.addEventListener('reindex_complete', () => {
-        // Refresh all data in parallel — same set as useGraph's initial load
         Promise.all([
           graphApi.getGraph(),
           graphApi.getOverview().catch(() => null),
@@ -57,12 +40,10 @@ export function useSSE(): void {
       });
 
       source.addEventListener('reindex_start', () => {
-        // Informational -- could trigger a loading spinner in the future.
         console.info('[SSE] Reindex started');
       });
 
       source.onerror = () => {
-        // Close the broken connection and schedule a reconnect.
         source.close();
         sourceRef.current = null;
 

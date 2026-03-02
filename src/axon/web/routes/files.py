@@ -11,7 +11,6 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["files"])
 
-# Extension-to-language mapping for common languages
 _EXTENSION_LANGUAGE: dict[str, str] = {
     ".py": "python",
     ".js": "javascript",
@@ -49,7 +48,6 @@ _EXTENSION_LANGUAGE: dict[str, str] = {
 
 
 def _detect_language(file_path: str) -> str:
-    """Detect language from file extension."""
     suffix = Path(file_path).suffix.lower()
     return _EXTENSION_LANGUAGE.get(suffix, "")
 
@@ -67,7 +65,6 @@ def get_tree(request: Request) -> dict:
     except Exception:
         file_rows = []
 
-
     symbol_counts: dict[str, int] = {}
     try:
         count_rows = storage.execute_raw(
@@ -79,7 +76,6 @@ def get_tree(request: Request) -> dict:
                 symbol_counts[row[0]] = row[1]
     except Exception:
         pass
-
 
     root_children: dict[str, dict] = {}
 
@@ -126,7 +122,6 @@ def get_tree(request: Request) -> dict:
         }
 
     def _dict_to_list(children_dict: dict) -> list[dict]:
-        """Convert the dict-based tree to a list-based tree, sorted."""
         result = []
         for node in sorted(children_dict.values(), key=lambda n: (n["type"] != "folder", n["name"])):
             entry = {

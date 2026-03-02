@@ -1,14 +1,3 @@
-/**
- * TypeScript type definitions for the Axon Web UI.
- *
- * All interfaces match the camelCase JSON responses produced by the
- * FastAPI backend (see `src/axon/web/routes/`).
- */
-
-// ---------------------------------------------------------------------------
-// Graph primitives
-// ---------------------------------------------------------------------------
-
 export interface GraphNode {
   id: string;
   label: string;
@@ -34,20 +23,12 @@ export interface GraphEdge {
   stepNumber?: number;
 }
 
-// ---------------------------------------------------------------------------
-// Overview
-// ---------------------------------------------------------------------------
-
 export interface OverviewStats {
   nodesByLabel: Record<string, number>;
   edgesByType: Record<string, number>;
   totalNodes: number;
   totalEdges: number;
 }
-
-// ---------------------------------------------------------------------------
-// Node detail / context
-// ---------------------------------------------------------------------------
 
 export interface CallerCalleeEntry {
   node: GraphNode;
@@ -62,19 +43,11 @@ export interface NodeContext {
   processMemberships: string[];
 }
 
-// ---------------------------------------------------------------------------
-// Impact analysis
-// ---------------------------------------------------------------------------
-
 export interface ImpactResult {
   target: GraphNode;
   affected: number;
   depths: Record<string, GraphNode[]>;
 }
-
-// ---------------------------------------------------------------------------
-// Search
-// ---------------------------------------------------------------------------
 
 export interface SearchResult {
   nodeId: string;
@@ -84,10 +57,6 @@ export interface SearchResult {
   label: string;
   snippet: string;
 }
-
-// ---------------------------------------------------------------------------
-// Health
-// ---------------------------------------------------------------------------
 
 export interface HealthBreakdown {
   deadCode: number;
@@ -102,10 +71,6 @@ export interface HealthScore {
   breakdown: HealthBreakdown;
 }
 
-// ---------------------------------------------------------------------------
-// Dead code
-// ---------------------------------------------------------------------------
-
 export interface DeadCodeEntry {
   name: string;
   type: string;
@@ -117,20 +82,12 @@ export interface DeadCodeReport {
   byFile: Record<string, DeadCodeEntry[]>;
 }
 
-// ---------------------------------------------------------------------------
-// Coupling
-// ---------------------------------------------------------------------------
-
 export interface CouplingPair {
   fileA: string;
   fileB: string;
   strength: number;
   coChanges: number;
 }
-
-// ---------------------------------------------------------------------------
-// Communities
-// ---------------------------------------------------------------------------
 
 export interface Community {
   id: string;
@@ -139,10 +96,6 @@ export interface Community {
   cohesion: number | null;
   members: string[];
 }
-
-// ---------------------------------------------------------------------------
-// Processes
-// ---------------------------------------------------------------------------
 
 export interface ProcessStep {
   nodeId: string;
@@ -155,10 +108,6 @@ export interface Process {
   stepCount: number;
   steps: ProcessStep[];
 }
-
-// ---------------------------------------------------------------------------
-// File tree & content
-// ---------------------------------------------------------------------------
 
 export interface FileContent {
   path: string;
@@ -175,10 +124,6 @@ export interface FolderNode {
   children?: FolderNode[];
 }
 
-// ---------------------------------------------------------------------------
-// Cypher
-// ---------------------------------------------------------------------------
-
 export interface CypherResult {
   columns: string[];
   rows: unknown[][];
@@ -186,15 +131,10 @@ export interface CypherResult {
   durationMs: number;
 }
 
-/** A saved Cypher query entry for the client-side history. */
 export interface CypherEntry {
   query: string;
   timestamp: number;
 }
-
-// ---------------------------------------------------------------------------
-// Diff
-// ---------------------------------------------------------------------------
 
 export interface ModifiedNodePair {
   before: GraphNode;
@@ -209,25 +149,16 @@ export interface DiffResult {
   removedEdges: GraphEdge[];
 }
 
-/** Client-side overlay state derived from a DiffResult. */
 export interface DiffOverlay {
   added: Set<string>;
   removed: Set<string>;
   modified: Set<string>;
 }
 
-// ---------------------------------------------------------------------------
-// SSE events
-// ---------------------------------------------------------------------------
-
 export type SSEEvent =
   | { type: 'reindex_start'; data: Record<string, never> }
   | { type: 'reindex_complete'; data: { added?: string[]; removed?: string[]; modified?: string[] } }
   | { type: 'file_changed'; data: { path: string } };
-
-// ---------------------------------------------------------------------------
-// Constants for type-safe filtering
-// ---------------------------------------------------------------------------
 
 export const NODE_LABELS = [
   'function',

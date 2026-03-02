@@ -6,18 +6,9 @@ import { useGraphStore } from '@/stores/graphStore';
 import { codeToHtml } from 'shiki';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-/** Turn "src/axon/core/foo.py" into ["src", "axon", "core", "foo.py"]. */
 function breadcrumb(filePath: string): string[] {
   return filePath.split('/').filter(Boolean);
 }
-
-// ---------------------------------------------------------------------------
-// Main component
-// ---------------------------------------------------------------------------
 
 interface CodeTabProps {
   nodeId: string;
@@ -29,7 +20,6 @@ export function CodeTab({ nodeId }: CodeTabProps) {
   const loading = useDataStore((s) => s.loading);
   const setLoading = useDataStore((s) => s.setLoading);
 
-  // Read node metadata directly from the graph store (already loaded)
   const selectedNode = useGraphStore((s) => s.nodes.find((n) => n.id === nodeId));
   const nodeStartLine = selectedNode?.startLine ?? 0;
   const nodeEndLine = selectedNode?.endLine ?? 0;
@@ -38,7 +28,6 @@ export function CodeTab({ nodeId }: CodeTabProps) {
   const [highlightedHtml, setHighlightedHtml] = useState<string>('');
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Fetch file content using filePath from the graph store
   const fetchCode = useCallback(
     async (filePath: string | undefined) => {
       if (!filePath) return;
@@ -61,7 +50,6 @@ export function CodeTab({ nodeId }: CodeTabProps) {
     void fetchCode(selectedNode?.filePath);
   }, [nodeId, selectedNode?.filePath, fetchCode]);
 
-  // Highlight with Shiki
   useEffect(() => {
     if (!fileContent) {
       setHighlightedHtml('');
@@ -122,11 +110,9 @@ export function CodeTab({ nodeId }: CodeTabProps) {
     };
   }, [fileContent]);
 
-  // Auto-scroll to symbol start line
   useEffect(() => {
     if (!scrollRef.current || !highlightedHtml || nodeStartLine <= 0) return;
 
-    // Wait for DOM to render
     requestAnimationFrame(() => {
       const lineEl = scrollRef.current?.querySelector(
         `[data-line="${nodeStartLine}"]`,
@@ -209,10 +195,6 @@ export function CodeTab({ nodeId }: CodeTabProps) {
   );
 }
 
-// ---------------------------------------------------------------------------
-// Shiki-rendered code with line highlighting
-// ---------------------------------------------------------------------------
-
 function ShikiRenderedCode({
   html,
   startLine,
@@ -222,9 +204,6 @@ function ShikiRenderedCode({
   startLine: number;
   endLine: number;
 }) {
-  // Shiki outputs a <pre><code> block. We need to inject line numbers and
-  // highlight the active range. Parse the lines from the HTML.
-  // Shiki 1.x produces one <span class="line">...</span> per line inside the code block.
   const lineRegex = /<span class="line">(.*)<\/span>/gm;
   const lineMatches: string[] = [];
   let match: RegExpExecArray | null;
@@ -232,7 +211,6 @@ function ShikiRenderedCode({
     lineMatches.push(match[1]);
   }
 
-  // If we couldn't parse lines (different Shiki output), show raw
   if (lineMatches.length === 0) {
     return (
       <div
@@ -303,10 +281,6 @@ function ShikiRenderedCode({
     </table>
   );
 }
-
-// ---------------------------------------------------------------------------
-// Plain-text fallback
-// ---------------------------------------------------------------------------
 
 function PlainCode({
   lines,

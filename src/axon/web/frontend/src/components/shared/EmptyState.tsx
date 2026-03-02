@@ -1,10 +1,3 @@
-/**
- * Centered empty-state placeholder.
- *
- * Displays an optional icon, a message, and an optional action button.
- * Used when a panel has no data to show.
- */
-
 import type { ReactNode } from 'react';
 
 interface EmptyStateAction {
@@ -13,11 +6,8 @@ interface EmptyStateAction {
 }
 
 interface EmptyStateProps {
-  /** Optional 24px icon rendered above the message. */
   icon?: ReactNode;
-  /** Descriptive text shown in dimmed monospace. */
   message: string;
-  /** Optional action button rendered below the message. */
   action?: EmptyStateAction;
 }
 

@@ -19,7 +19,6 @@ export function InheritanceTree() {
 
   const roots = useMemo(() => buildForest(nodes, edges), [nodes, edges]);
 
-  // Build method count map once for all tree nodes
   const methodCounts = useMemo(() => {
     const map = new Map<string, number>();
     for (const n of nodes) {
@@ -167,29 +166,22 @@ function TreeNodeRow({ node, depth, methodCounts }: { node: TreeNode; depth: num
   );
 }
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
 function buildForest(
   nodes: { id: string; name: string; filePath: string; startLine: number; label: string }[],
   edges: { type: string; source: string; target: string }[],
 ): TreeNode[] {
-  // Filter to extends/implements edges
   const heritageEdges = edges.filter(
     (e) => e.type === 'extends' || e.type === 'implements',
   );
 
   if (heritageEdges.length === 0) return [];
 
-  // Build node lookup
   const nodeMap = new Map<string, (typeof nodes)[number]>();
   for (const n of nodes) {
     nodeMap.set(n.id, n);
   }
 
-  // Build parent -> children mapping
-  // Edge: child --extends/implements--> parent (source is child, target is parent)
+  // Edge direction: child --extends/implements--> parent (source=child, target=parent)
   const childrenMap = new Map<string, { childId: string; edgeType: 'extends' | 'implements' }[]>();
   const hasParent = new Set<string>();
 
@@ -207,14 +199,12 @@ function buildForest(
     });
   }
 
-  // Collect all nodes involved
   const involvedIds = new Set<string>();
   for (const e of heritageEdges) {
     involvedIds.add(e.source);
     involvedIds.add(e.target);
   }
 
-  // Roots = involved nodes that have no parent
   const rootIds = Array.from(involvedIds).filter((id) => !hasParent.has(id));
 
   function buildTreeNode(
@@ -252,7 +242,6 @@ function buildForest(
     if (tree) forest.push(tree);
   }
 
-  // Sort roots by name
   forest.sort((a, b) => a.name.localeCompare(b.name));
 
   return forest;

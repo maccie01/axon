@@ -15,8 +15,6 @@ import { useSSE } from '@/hooks/useSSE';
 export function App() {
   const activeView = useViewStore((s) => s.activeView);
   useKeyboard();
-
-  // Subscribe to SSE events for live graph reload on reindex.
   useSSE();
 
   return (

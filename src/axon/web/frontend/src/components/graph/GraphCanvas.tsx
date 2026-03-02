@@ -1,12 +1,3 @@
-/**
- * WebGL-rendered graph canvas powered by Sigma.js v3 and Graphology.
- *
- * Initialises the Sigma renderer when the Graphology instance is ready,
- * applies the active layout (force / tree / radial), and wires up
- * selection, hover, type-based filtering, and the minimap overlay
- * through the Zustand graph store.
- */
-
 import { useEffect, useRef, useCallback, useState } from 'react';
 import Sigma from 'sigma';
 import type { MultiDirectedGraph } from 'graphology';
@@ -25,21 +16,15 @@ interface GraphCanvasProps {
   className?: string;
 }
 
-// ---------------------------------------------------------------------------
-// Layout algorithms
-// ---------------------------------------------------------------------------
-
-/** Position map: nodeId -> { x, y }. */
 type PositionMap = Map<string, { x: number; y: number }>;
 
 /**
  * Compute a hierarchical top-to-bottom tree layout.
  *
- * Uses **undirected BFS from the highest-degree hub node** so the graph
- * fans out into concentric layers of increasing width — layer 0 has 1
- * node, layer 1 has ~20, layer 2 has ~200, etc. This avoids the flat-line
- * bug caused by directed-edge filtering (which made ~80% of nodes roots
- * at layer 0).
+ * Uses undirected BFS from the highest-degree hub node so the graph
+ * fans out into concentric layers of increasing width. This avoids the
+ * flat-line bug caused by directed-edge filtering (which made ~80% of
+ * nodes roots at layer 0).
  *
  * Disconnected nodes are placed on an extra bottom layer.
  * Within each layer, nodes are sorted by their `directory` attribute to
@@ -52,7 +37,6 @@ function computeTreeLayout(graph: MultiDirectedGraph): PositionMap {
 
   if (nodeIds.length === 0) return positions;
 
-  // Find the hub node: highest total degree.
   let hubNode = nodeIds[0];
   let maxDeg = 0;
   for (const id of nodeIds) {
@@ -63,7 +47,6 @@ function computeTreeLayout(graph: MultiDirectedGraph): PositionMap {
     }
   }
 
-  // Undirected BFS from the hub — every edge counts, regardless of type.
   const layers = new Map<string, number>();
   layers.set(hubNode, 0);
   const queue: string[] = [hubNode];
@@ -80,7 +63,6 @@ function computeTreeLayout(graph: MultiDirectedGraph): PositionMap {
     });
   }
 
-  // Disconnected nodes → maxLayer + 1.
   const maxReachable = layers.size > 0 ? Math.max(...layers.values()) : 0;
   for (const id of nodeIds) {
     if (!layers.has(id)) {
@@ -88,7 +70,6 @@ function computeTreeLayout(graph: MultiDirectedGraph): PositionMap {
     }
   }
 
-  // Group nodes by layer, sorting within each layer by directory for cohesion.
   const layerGroups = new Map<number, string[]>();
   for (const [id, depth] of layers) {
     const group = layerGroups.get(depth) ?? [];
@@ -107,7 +88,6 @@ function computeTreeLayout(graph: MultiDirectedGraph): PositionMap {
   const maxLayer = Math.max(...layerGroups.keys());
   const LAYER_SPACING = 150;
 
-  // Adaptive horizontal spacing based on the widest layer.
   const widestCount = Math.max(...[...layerGroups.values()].map((g) => g.length));
   const nodeSpacing = Math.max(30, Math.min(80, 2400 / widestCount));
 
@@ -121,7 +101,6 @@ function computeTreeLayout(graph: MultiDirectedGraph): PositionMap {
     }
   }
 
-  // Center around origin.
   if (maxLayer >= 0) {
     const centerY = (maxLayer * LAYER_SPACING) / 2;
     for (const [id, pos] of positions) {
@@ -136,7 +115,7 @@ function computeTreeLayout(graph: MultiDirectedGraph): PositionMap {
  * Compute a radial layout with adaptive ring sizing.
  *
  * When a `centerNodeId` is provided (the selected node), it becomes the
- * center — creating a true ego-graph view. Otherwise falls back to the
+ * center -- creating a true ego-graph view. Otherwise falls back to the
  * highest-degree node.
  *
  * Each ring's radius adapts to the number of nodes on it, so outer rings
@@ -150,7 +129,6 @@ function computeRadialLayout(graph: MultiDirectedGraph, centerNodeId?: string | 
 
   if (nodeIds.length === 0) return positions;
 
-  // Choose center: selected node or highest-degree fallback.
   let centerNode: string;
   if (centerNodeId && graph.hasNode(centerNodeId)) {
     centerNode = centerNodeId;
@@ -166,7 +144,6 @@ function computeRadialLayout(graph: MultiDirectedGraph, centerNodeId?: string | 
     }
   }
 
-  // BFS from center to assign ring levels.
   const ringMap = new Map<string, number>();
   ringMap.set(centerNode, 0);
   const queue: string[] = [centerNode];
@@ -183,7 +160,6 @@ function computeRadialLayout(graph: MultiDirectedGraph, centerNodeId?: string | 
     });
   }
 
-  // Group by ring. Unreachable nodes go to a separate orphan ring.
   const ringGroups = new Map<number, string[]>();
   let maxRing = 0;
   for (const [id, ring] of ringMap) {
@@ -198,11 +174,8 @@ function computeRadialLayout(graph: MultiDirectedGraph, centerNodeId?: string | 
     ringGroups.set(maxRing + 1, orphans);
   }
 
-  // Place center node at origin.
   positions.set(centerNode, { x: 0, y: 0 });
 
-  // Adaptive radius: each ring expands based on how many nodes it has,
-  // with a minimum gap of 100 from the previous ring.
   let prevRadius = 0;
   const sortedRings = [...ringGroups.keys()].filter((r) => r > 0).sort((a, b) => a - b);
 
@@ -211,7 +184,6 @@ function computeRadialLayout(graph: MultiDirectedGraph, centerNodeId?: string | 
     const count = members.length;
 
     // Radius must be large enough to fit `count` nodes without overlap.
-    // 80 units per node slot provides decent spacing at scale.
     const circumferenceNeeded = count * 80;
     const radiusFromCount = circumferenceNeeded / (2 * Math.PI);
     const radius = Math.max(prevRadius + 150, radiusFromCount);
@@ -237,9 +209,9 @@ function computeRadialLayout(graph: MultiDirectedGraph, centerNodeId?: string | 
  * Animate node positions from their current locations to new target positions
  * over a given duration using requestAnimationFrame with ease-out cubic.
  *
- * Writes the current frame ID to `frameRef` on **every tick** so that
+ * Writes the current frame ID to `frameRef` on every tick so that
  * `cancelAnimationFrame(frameRef.current)` always cancels the latest
- * scheduled frame — fixing rapid layout-switch glitches.
+ * scheduled frame -- fixing rapid layout-switch glitches.
  */
 function animatePositions(
   graph: MultiDirectedGraph,
@@ -248,7 +220,6 @@ function animatePositions(
   frameRef: React.MutableRefObject<number>,
   onComplete?: () => void,
 ): void {
-  // Capture starting positions.
   const starts: PositionMap = new Map();
   graph.forEachNode((id, attrs) => {
     starts.set(id, { x: attrs.x as number, y: attrs.y as number });
@@ -259,7 +230,6 @@ function animatePositions(
   function tick() {
     const elapsed = performance.now() - t0;
     const progress = Math.min(elapsed / duration, 1);
-    // Ease-out cubic for smooth deceleration.
     const ease = 1 - Math.pow(1 - progress, 3);
 
     graph.forEachNode((id) => {
@@ -281,19 +251,6 @@ function animatePositions(
   frameRef.current = requestAnimationFrame(tick);
 }
 
-// ---------------------------------------------------------------------------
-// Main component
-// ---------------------------------------------------------------------------
-
-/**
- * Core graph visualisation component.
- *
- * Renders the knowledge graph using Sigma.js with WebGL acceleration.
- * Supports three layout modes: force (ForceAtlas2 in web worker),
- * tree (hierarchical top-to-bottom), and radial (concentric rings).
- * Node/edge visibility, selection, and hover dimming are all handled
- * through nodeReducer/edgeReducer callbacks.
- */
 export function GraphCanvas({ className }: GraphCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const sigmaRef = useRef<Sigma | null>(null);
@@ -301,7 +258,6 @@ export function GraphCanvas({ className }: GraphCanvasProps) {
   const animFrameRef = useRef<number>(0);
   const { graphRef, loading, error } = useGraph();
   const [layoutRunning, setLayoutRunning] = useState(false);
-  // Local state to trigger re-render when sigma instance becomes available.
   const [sigmaReady, setSigmaReady] = useState(false);
 
   const selectedNodeId = useGraphStore((s) => s.selectedNodeId);
@@ -314,7 +270,6 @@ export function GraphCanvas({ className }: GraphCanvasProps) {
   const layoutMode = useGraphStore((s) => s.layoutMode);
   const minimapVisible = useGraphStore((s) => s.minimapVisible);
 
-  /** Zoom the camera in by one step. */
   const zoomIn = useCallback(() => {
     const camera = sigmaRef.current?.getCamera();
     if (camera) {
@@ -322,7 +277,6 @@ export function GraphCanvas({ className }: GraphCanvasProps) {
     }
   }, []);
 
-  /** Zoom the camera out by one step. */
   const zoomOut = useCallback(() => {
     const camera = sigmaRef.current?.getCamera();
     if (camera) {
@@ -330,7 +284,6 @@ export function GraphCanvas({ className }: GraphCanvasProps) {
     }
   }, []);
 
-  /** Reset the camera to show the entire graph. */
   const fitToScreen = useCallback(() => {
     const camera = sigmaRef.current?.getCamera();
     if (camera) {
@@ -338,7 +291,6 @@ export function GraphCanvas({ className }: GraphCanvasProps) {
     }
   }, []);
 
-  /** Toggle the ForceAtlas2 layout on/off (only relevant in force mode). */
   const toggleLayout = useCallback(() => {
     const graph = graphRef.current;
     const layout = layoutRef.current;
@@ -368,7 +320,6 @@ export function GraphCanvas({ className }: GraphCanvasProps) {
       layoutRef.current = fresh;
       setLayoutRunning(true);
 
-      // Auto-stop after 6s.
       setTimeout(() => {
         if (fresh.isRunning()) {
           fresh.stop();
@@ -378,7 +329,6 @@ export function GraphCanvas({ className }: GraphCanvasProps) {
     }
   }, []);
 
-  // Initialise Sigma and ForceAtlas2 when the Graphology graph is ready.
   useEffect(() => {
     const container = containerRef.current;
     if (!container || !graphRef.current) return;
@@ -387,7 +337,6 @@ export function GraphCanvas({ className }: GraphCanvasProps) {
     // Snapshot the current store values for the reducers. The refresh effect
     // below triggers sigma.refresh() whenever these change, which causes
     // Sigma to re-invoke the reducers with fresh closure values.
-    // Create a bordered node program: inner fill + thin outer border ring.
     const BorderedNodeProgram = createNodeBorderProgram({
       borders: [
         { size: { value: 0.15, mode: 'relative' }, color: { attribute: 'borderColor', defaultValue: '#5a6a7a' } },
@@ -403,14 +352,10 @@ export function GraphCanvas({ className }: GraphCanvasProps) {
       labelColor: { color: '#8899aa' },
       defaultEdgeColor: '#2a3a4d',
       defaultNodeColor: '#4a5a6a',
-      // Only show labels for nodes that are large enough (high degree).
       labelRenderedSizeThreshold: 12,
-      // Reduce label density to prevent overlap.
       labelDensity: 0.5,
       labelGridCellSize: 120,
-      // Hide edges while panning/zooming to reduce clutter.
       hideEdgesOnMove: true,
-      // Use bordered node program instead of plain circle.
       defaultNodeType: 'bordered',
       nodeProgramClasses: {
         bordered: BorderedNodeProgram,
@@ -444,7 +389,6 @@ export function GraphCanvas({ className }: GraphCanvasProps) {
           return res;
         }
 
-        // Single-node selection dimming.
         if (state.selectedNodeId && node !== state.selectedNodeId) {
           const isNeighbor =
             graph.hasEdge(state.selectedNodeId, node) ||
@@ -484,7 +428,6 @@ export function GraphCanvas({ className }: GraphCanvasProps) {
           return res;
         }
 
-        // Set-based highlighting: show edges between highlighted nodes.
         if (state.highlightedNodeIds.size > 0) {
           const source = graph.source(edge);
           const target = graph.target(edge);
@@ -497,7 +440,6 @@ export function GraphCanvas({ className }: GraphCanvasProps) {
           return res;
         }
 
-        // Single-node selection.
         if (state.selectedNodeId) {
           const source = graph.source(edge);
           const target = graph.target(edge);
@@ -516,9 +458,6 @@ export function GraphCanvas({ className }: GraphCanvasProps) {
     sigmaRef.current = sigma;
     setSigmaReady(true);
 
-    // ---------------------------------------------------------------
-    // Interaction events + node dragging
-    // ---------------------------------------------------------------
     let draggedNode: string | null = null;
     let isDragging = false;
     let dragStartX = 0;
@@ -577,9 +516,6 @@ export function GraphCanvas({ className }: GraphCanvasProps) {
       container.style.cursor = 'default';
     });
 
-    // ---------------------------------------------------------------
-    // ForceAtlas2 layout
-    // ---------------------------------------------------------------
     const layout = new FA2LayoutSupervisor(graph, {
       settings: {
         gravity: 1,
@@ -615,7 +551,6 @@ export function GraphCanvas({ className }: GraphCanvasProps) {
     };
   }, [loading, selectNode, setHoveredNode]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Apply layout mode changes.
   useEffect(() => {
     const graph = graphRef.current;
     const layout = layoutRef.current;
@@ -650,8 +585,6 @@ export function GraphCanvas({ className }: GraphCanvasProps) {
       } else if (layoutMode === 'radial') {
         targets = computeRadialLayout(graph, selectedNodeId);
       } else if (layoutMode === 'community') {
-        // Use circlePack to group nodes by community attribute.
-        // Assign community from store data, falling back to directory.
         const communities = useGraphStore.getState().communities;
         const memberToCommunity = new Map<string, string>();
         for (const c of communities) {
@@ -667,14 +600,12 @@ export function GraphCanvas({ className }: GraphCanvasProps) {
 
         circlePack.assign(graph, { hierarchyAttributes: ['community'], scale: 1000 });
 
-        // Read assigned positions into our PositionMap.
         targets = new Map();
         graph.forEachNode((id, attrs) => {
           targets.set(id, { x: attrs.x as number, y: attrs.y as number });
         });
       } else {
-        // 'circular' layout — all nodes on a ring.
-        // Scale adapts to node count so nodes don't bunch up.
+        // 'circular' layout -- scale adapts to node count so nodes don't bunch up.
         const nodeCount = graph.order;
         const circularScale = Math.max(500, nodeCount * 2);
         circular.assign(graph, { scale: circularScale });
@@ -689,12 +620,10 @@ export function GraphCanvas({ className }: GraphCanvasProps) {
     }
   }, [layoutMode, selectedNodeId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Re-render Sigma when filters, selection, or hover state change.
   useEffect(() => {
     sigmaRef.current?.refresh();
   }, [selectedNodeId, hoveredNodeId, highlightedNodeIds, visibleNodeTypes, visibleEdgeTypes]);
 
-  // Determine if the graph is empty (loaded but no nodes).
   const nodes = useGraphStore((s) => s.nodes);
   const graphEmpty = !loading && !error && nodes.length === 0;
 
@@ -747,10 +676,6 @@ export function GraphCanvas({ className }: GraphCanvasProps) {
   );
 }
 
-// ---------------------------------------------------------------------------
-// Inline GraphControls (small enough to co-locate)
-// ---------------------------------------------------------------------------
-
 interface GraphControlsProps {
   onZoomIn: () => void;
   onZoomOut: () => void;
@@ -759,12 +684,6 @@ interface GraphControlsProps {
   layoutRunning: boolean;
 }
 
-/**
- * Floating control bar at the bottom-left of the graph canvas.
- *
- * Four small buttons stacked vertically: zoom in, zoom out, fit to screen,
- * and play/pause the force-directed layout.
- */
 function GraphControls({
   onZoomIn,
   onZoomOut,
@@ -792,10 +711,6 @@ function GraphControls({
     </div>
   );
 }
-
-// ---------------------------------------------------------------------------
-// Control button wrapper
-// ---------------------------------------------------------------------------
 
 interface ControlButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   children: React.ReactNode;
@@ -827,10 +742,6 @@ function ControlButton({ children, ...props }: ControlButtonProps) {
     </button>
   );
 }
-
-// ---------------------------------------------------------------------------
-// Inline SVG icons (12x12) to avoid importing lucide-react for 4 tiny icons
-// ---------------------------------------------------------------------------
 
 function PlusIcon() {
   return (
@@ -875,13 +786,6 @@ function PauseIcon() {
   );
 }
 
-// ---------------------------------------------------------------------------
-// Layout-running indicator (bottom-left, above controls)
-// ---------------------------------------------------------------------------
-
-/**
- * Small indicator shown while ForceAtlas2 is optimising the layout.
- */
 function LayoutIndicator() {
   return (
     <div

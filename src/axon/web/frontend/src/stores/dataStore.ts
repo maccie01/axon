@@ -10,24 +10,16 @@ import type {
 } from '@/types';
 
 interface DataStore {
-  // Node detail
   nodeContext: NodeContext | null;
   impactResult: ImpactResult | null;
   fileContent: { path: string; content: string; language: string } | null;
-
-  // Analysis data
   healthScore: HealthScore | null;
   deadCode: DeadCodeReport | null;
   allProcesses: Process[] | null;
-
-  // Cypher
   cypherHistory: CypherEntry[];
   cypherResult: CypherResult | null;
-
-  // Loading states
   loading: Record<string, boolean>;
 
-  // Actions
   setNodeContext: (ctx: NodeContext | null) => void;
   setImpactResult: (result: ImpactResult | null) => void;
   setFileContent: (content: { path: string; content: string; language: string } | null) => void;

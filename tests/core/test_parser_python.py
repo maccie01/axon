@@ -1,5 +1,3 @@
-"""Tests for the Python language parser."""
-
 from __future__ import annotations
 
 import pytest
@@ -13,14 +11,10 @@ def parser() -> PythonParser:
     return PythonParser()
 
 
-# ---------------------------------------------------------------------------
 # Functions
-# ---------------------------------------------------------------------------
 
 
 class TestParseSimpleFunction:
-    """Parse a standalone function with type annotations."""
-
     CODE = (
         'def greet(name: str) -> str:\n'
         '    return f"Hello, {name}"\n'
@@ -64,14 +58,10 @@ class TestParseSimpleFunction:
         assert "return" in func.content
 
 
-# ---------------------------------------------------------------------------
 # Classes with methods
-# ---------------------------------------------------------------------------
 
 
 class TestParseClassWithMethods:
-    """Parse a class that contains methods."""
-
     CODE = (
         "class User:\n"
         "    def __init__(self, name: str):\n"
@@ -109,14 +99,10 @@ class TestParseClassWithMethods:
         assert method_names == {"__init__", "save"}
 
 
-# ---------------------------------------------------------------------------
 # Inheritance
-# ---------------------------------------------------------------------------
 
 
 class TestParseInheritance:
-    """Parse class inheritance (heritage)."""
-
     def test_single_parent(self, parser: PythonParser) -> None:
         code = "class Admin(User):\n    pass\n"
         result = parser.parse(code, "test.py")
@@ -134,14 +120,10 @@ class TestParseInheritance:
         assert len(result.heritage) == 0
 
 
-# ---------------------------------------------------------------------------
 # Imports
-# ---------------------------------------------------------------------------
 
 
 class TestParseImports:
-    """Parse import statements."""
-
     CODE = (
         "import os\n"
         "from os.path import join\n"
@@ -200,14 +182,10 @@ class TestParseImports:
         assert "exists" in imp.names
 
 
-# ---------------------------------------------------------------------------
 # Function calls
-# ---------------------------------------------------------------------------
 
 
 class TestParseFunctionCalls:
-    """Parse function and method calls."""
-
     CODE = (
         "def process():\n"
         "    result = validate(data)\n"
@@ -254,14 +232,10 @@ class TestParseFunctionCalls:
         assert m1[0].receiver == "obj"
 
 
-# ---------------------------------------------------------------------------
 # Type annotations
-# ---------------------------------------------------------------------------
 
 
 class TestParseTypeAnnotations:
-    """Parse type annotations from parameters, return types, and variables."""
-
     CODE = (
         "def handle(user: User, config: Config) -> Response:\n"
         "    result: AuthResult = authenticate(user)\n"
@@ -307,14 +281,10 @@ class TestParseTypeAnnotations:
         assert any(t.name == "AppConfig" for t in var_refs)
 
 
-# ---------------------------------------------------------------------------
 # Edge cases
-# ---------------------------------------------------------------------------
 
 
 class TestEdgeCases:
-    """Edge cases and less common patterns."""
-
     def test_empty_file(self, parser: PythonParser) -> None:
         result = parser.parse("", "empty.py")
         assert result.symbols == []
@@ -358,14 +328,10 @@ class TestEdgeCases:
         assert methods[0].class_name == "Service"
 
 
-# ---------------------------------------------------------------------------
 # Decorators
-# ---------------------------------------------------------------------------
 
 
 class TestParseDecorators:
-    """Decorator names are captured on SymbolInfo."""
-
     def test_simple_decorator(self, parser: PythonParser) -> None:
         code = (
             "@staticmethod\n"

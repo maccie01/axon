@@ -38,7 +38,6 @@ export function DeadCode() {
 
   const handleShowAll = useCallback(() => {
     if (!report) return;
-    // Collect all dead node IDs by matching name + file path in the graph store
     const deadIds = new Set<string>();
     for (const [filePath, entries] of Object.entries(report.byFile)) {
       for (const entry of entries) {
@@ -51,7 +50,6 @@ export function DeadCode() {
         if (match) deadIds.add(match.id);
       }
     }
-    // Also include nodes flagged isDead directly
     for (const node of nodes) {
       if (node.isDead) deadIds.add(node.id);
     }
@@ -66,7 +64,6 @@ export function DeadCode() {
 
   const handleSymbolClick = useCallback(
     (filePath: string, entry: DeadCodeEntry) => {
-      // Try to find the node in the graph store
       const match = nodes.find(
         (n) =>
           n.name === entry.name &&

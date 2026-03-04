@@ -23,3 +23,7 @@ wheels/
 # Project-local config (not for upstream)
 CLAUDE.md
 .cluster/
+TIMELINE.md
+
+# Git worktrees
+.worktrees/

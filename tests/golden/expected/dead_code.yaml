@@ -1,0 +1,119 @@
+# Ground truth: dead code in the Python golden codebase.
+#
+# dead: symbols/modules that MUST be flagged as is_dead=True
+# live: symbols that MUST NOT be flagged as is_dead (false positive guard)
+#
+# Reasoning:
+# - Entry points: main.py startup(), run() -- called from __main__ block
+# - auth/_legacy.py -- never imported by anything, whole module is dead
+# - utils/_unused_helper.py -- never imported by anything, whole module is dead
+# - auth/validators._unused_validator() -- never called
+# - auth/service._dead_in_service() -- never called from outside
+# - utils/helpers._truly_dead() -- not in __all__, never called or imported
+# - payments/gateway._unused_gateway_helper() -- never called
+
+dead:
+  # Dead modules (never imported)
+  - file: "python/auth/_legacy.py"
+    name: "old_validate"
+    reason: "_legacy.py is never imported"
+
+  - file: "python/auth/_legacy.py"
+    name: "old_check"
+    reason: "_legacy.py is never imported"
+
+  - file: "python/auth/_legacy.py"
+    name: "LegacyAuthProvider"
+    reason: "_legacy.py is never imported"
+
+  - file: "python/utils/_unused_helper.py"
+    name: "dead_function_one"
+    reason: "_unused_helper.py is never imported"
+
+  - file: "python/utils/_unused_helper.py"
+    name: "dead_function_two"
+    reason: "_unused_helper.py is never imported"
+
+  - file: "python/utils/_unused_helper.py"
+    name: "DeadClass"
+    reason: "_unused_helper.py is never imported"
+
+  # Dead functions in live modules (never called)
+  - file: "python/auth/validators.py"
+    name: "_unused_validator"
+    reason: "never called from anywhere"
+
+  - file: "python/payments/gateway.py"
+    name: "_unused_gateway_helper"
+    reason: "never called from anywhere"
+
+  - file: "python/utils/helpers.py"
+    name: "_truly_dead"
+    reason: "not in __all__, never called or imported directly"
+
+  # Dead function in live module that calls another dead function
+  - file: "python/auth/service.py"
+    name: "_dead_in_service"
+    reason: "never called from outside the module"
+
+live:
+  # Public API must be live
+  - file: "python/auth/service.py"
+    name: "AuthService"
+    reason: "imported and used in main.py and payments/processor.py"
+
+  - file: "python/auth/service.py"
+    name: "validate_token"
+    reason: "called by payments/processor.py::charge_card"
+
+  - file: "python/auth/service.py"
+    name: "init"
+    reason: "called by main.py::startup"
+
+  - file: "python/auth/validators.py"
+    name: "validate_claims"
+    reason: "called by auth/service.py::validate_token"
+
+  - file: "python/auth/validators.py"
+    name: "check_expiry"
+    reason: "called by auth/service.py::validate_token"
+
+  - file: "python/payments/processor.py"
+    name: "charge_card"
+    reason: "called by PaymentProcessor.process"
+
+  - file: "python/payments/gateway.py"
+    name: "send_to_gateway"
+    reason: "called by payments/processor.py::charge_card"
+
+  - file: "python/main.py"
+    name: "startup"
+    reason: "entry point -- called from __main__ block"
+
+  - file: "python/main.py"
+    name: "run"
+    reason: "entry point -- called from __main__ block"
+
+  # NOTE: auth/validators.validate IS live (called by PaymentProcessor.refund via
+  # payments.gateway import). However Axon misses this call edge (known limitation:
+  # method calls via composition aren't resolved), so it may incorrectly flag this
+  # as dead. Tracked in known_false_positives below.
+
+  # _internal_helper is called by _dead_in_service -- tricky:
+  # it IS called, but only by a dead function. Axon may or may not flag it.
+  # Mark as unknown -- exclude from both live and dead assertions.
+
+# known_false_positives: live symbols that Axon incorrectly flags as dead.
+# These document Axon bugs without failing CI -- any NEW symbol appearing
+# here (beyond this list) would indicate a regression.
+known_false_positives:
+  - file: "python/auth/validators.py"
+    name: "validate"
+    reason: "Live (called by PaymentProcessor.refund), but Axon misses the call edge
+      because PaymentProcessor.refund uses a composed object (self._auth) and
+      Axon doesn't resolve method calls via type inference. Cascades into dead code FP."
+
+metrics:
+  # FPs beyond the known_false_positives list are real regressions
+  maximum_false_positives: 0
+  maximum_false_negative_ratio: 0.30

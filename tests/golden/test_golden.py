@@ -16,6 +16,7 @@ from axon.core.storage.kuzu_backend import KuzuBackend
 
 from .conftest import (
     call_edge_exists,
+    is_symbol_dead,
     load_expected,
     parse_edge_ref,
     symbol_exists,
@@ -249,3 +250,82 @@ class TestCallEdges:
             "python/main.py", "startup",
             "python/auth/service.py", "init",
         ), "startup must call auth.service.init"
+
+
+class TestDeadCode:
+    """Dead code detection accuracy against ground truth."""
+
+    def test_no_false_positives(self, golden_storage: KuzuBackend) -> None:
+        """Live symbols must NOT be flagged as dead (zero false positives).
+
+        Symbols in known_false_positives are excluded -- they document existing
+        Axon bugs. Any live symbol flagged dead BEYOND the known list is a regression.
+        """
+        data = load_expected("dead_code.yaml")
+        known_fp_keys = {
+            (sym["file"], sym["name"])
+            for sym in data.get("known_false_positives", [])
+        }
+        false_positives = []
+
+        for sym in data.get("live", []):
+            key = (sym["file"], sym["name"])
+            result = is_symbol_dead(golden_storage, sym["file"], sym["name"])
+            if result is True:
+                if key in known_fp_keys:
+                    # Known bug -- print but don't fail
+                    print(
+                        f"\n[Dead Code] Known FP (bug): {sym['file']}::{sym['name']}"
+                        f" -- {sym.get('reason', '')}"
+                    )
+                else:
+                    false_positives.append(
+                        f"FALSE POSITIVE: {sym['file']}::{sym['name']} flagged dead"
+                        f"  (reason it's live: {sym.get('reason', '')})"
+                    )
+
+        max_fp = data.get("metrics", {}).get("maximum_false_positives", 0)
+        assert len(false_positives) <= max_fp, (
+            f"Dead code false positives ({len(false_positives)}):\n"
+            + "\n".join(false_positives)
+        )
+
+    def test_dead_code_recall(self, golden_storage: KuzuBackend) -> None:
+        """Dead symbols must be flagged as is_dead=True (recall)."""
+        data = load_expected("dead_code.yaml")
+        max_fn_ratio = data.get("metrics", {}).get("maximum_false_negative_ratio", 0.30)
+
+        found_dead = 0
+        missed_dead = []
+        not_found = []
+
+        for sym in data.get("dead", []):
+            result = is_symbol_dead(golden_storage, sym["file"], sym["name"])
+            if result is None:
+                not_found.append(f"{sym['file']}::{sym['name']}")
+            elif result is True:
+                found_dead += 1
+            else:
+                missed_dead.append(
+                    f"NOT FLAGGED: {sym['file']}::{sym['name']}"
+                    f"  (reason: {sym.get('reason', '')})"
+                )
+
+        total_expected = len(data.get("dead", []))
+        false_negatives = len(missed_dead)
+        fn_ratio = false_negatives / total_expected if total_expected else 0
+
+        score = PhaseScore("Dead Code")
+        score.true_positives = found_dead
+        score.false_negatives = false_negatives
+        score.errors = missed_dead
+        _print_score_card([score])
+
+        if not_found:
+            print(f"\n[Dead Code] Symbols not found in graph ({len(not_found)}): {not_found[:3]}")
+
+        assert fn_ratio <= max_fn_ratio, (
+            f"Dead code false negative rate {fn_ratio:.1%} above maximum {max_fn_ratio:.1%}\n"
+            f"Not flagged as dead:\n"
+            + "\n".join(missed_dead[:5])
+        )

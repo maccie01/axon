@@ -114,3 +114,14 @@ def parse_edge_ref(ref: str) -> tuple[str, str]:
     """Parse 'python/auth/service.py::validate_token' into (file_path, name)."""
     file_part, _, name_part = ref.partition("::")
     return file_part, name_part
+
+
+def is_symbol_dead(storage: KuzuBackend, file_path: str, name: str) -> bool | None:
+    """Return True/False for is_dead, or None if symbol not found."""
+    node_id = get_symbol_node_id(storage, file_path, name)
+    if node_id is None:
+        return None
+    node = storage.get_node(node_id)
+    if node is None:
+        return None
+    return node.is_dead

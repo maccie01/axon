@@ -128,7 +128,7 @@ export function BranchDiff() {
             e.currentTarget.style.borderColor = 'var(--border)';
           }}
         />
-        <span style={{ fontSize: 10, color: 'var(--text-dimmed)' }}>\u2192</span>
+        <span style={{ fontSize: 10, color: 'var(--text-dimmed)' }}>{'\u2192'}</span>
         <input
           type="text"
           value={compare}

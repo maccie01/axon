@@ -50,7 +50,7 @@ export const useGraphStore = create<GraphStore>((set) => ({
   flowTraceNodeIds: [],
   diffOverlay: null,
   visibleNodeTypes: new Set(['function', 'class', 'method', 'interface']),
-  visibleEdgeTypes: new Set(['calls', 'imports']),
+  visibleEdgeTypes: new Set(['calls']),
   depthLimit: null,
   layoutMode: 'force',
   hullsVisible: false,
@@ -74,7 +74,24 @@ export const useGraphStore = create<GraphStore>((set) => ({
   }),
   toggleEdgeType: (type) => set((s) => {
     const next = new Set(s.visibleEdgeTypes);
-    next.has(type) ? next.delete(type) : next.add(type);
+    const enabling = !next.has(type);
+    enabling ? next.add(type) : next.delete(type);
+
+    // Auto-enable node types required for edges to be visible.
+    // Sigma hides edges when their endpoint nodes are hidden.
+    const EDGE_REQUIRES_NODES: Record<string, string[]> = {
+      imports: ['file'],
+      coupled_with: ['file'],
+      step_in_process: ['process'],
+    };
+    if (enabling && EDGE_REQUIRES_NODES[type]) {
+      const nodeTypes = new Set(s.visibleNodeTypes);
+      for (const nt of EDGE_REQUIRES_NODES[type]) {
+        nodeTypes.add(nt);
+      }
+      return { visibleEdgeTypes: next, visibleNodeTypes: nodeTypes };
+    }
+
     return { visibleEdgeTypes: next };
   }),
   setDepthLimit: (depth) => set({ depthLimit: depth }),

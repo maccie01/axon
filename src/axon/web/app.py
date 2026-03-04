@@ -42,8 +42,7 @@ def create_app(
     from axon.core.storage.kuzu_backend import KuzuBackend
 
     storage = KuzuBackend()
-    read_only = not watch
-    storage.initialize(db_path, read_only=read_only)
+    storage.initialize(db_path, read_only=True)
 
     event_listeners: list[asyncio.Queue] | None = [] if watch else None
 

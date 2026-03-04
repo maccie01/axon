@@ -13,13 +13,13 @@ const NODE_TYPE_CONFIG: { type: string; label: string; color: string }[] = [
   { type: 'process', label: 'Process', color: 'var(--node-process)' },
 ];
 
-const EDGE_TYPE_CONFIG: { type: string; label: string }[] = [
-  { type: 'calls', label: 'CALLS' },
-  { type: 'imports', label: 'IMPORTS' },
-  { type: 'extends', label: 'EXTENDS' },
-  { type: 'implements', label: 'IMPLEMENTS' },
-  { type: 'uses_type', label: 'USES_TYPE' },
-  { type: 'coupled_with', label: 'COUPLED_WITH' },
+const EDGE_TYPE_CONFIG: { type: string; label: string; color: string; arrow: boolean }[] = [
+  { type: 'calls',           label: 'CALLS',        color: '#C8DCFF', arrow: true },
+  { type: 'imports',         label: 'IMPORTS',       color: '#B4FFD2', arrow: true },
+  { type: 'extends',         label: 'EXTENDS',       color: '#FFD2A0', arrow: true },
+  { type: 'implements',      label: 'IMPLEMENTS',    color: '#FFBED2', arrow: true },
+  { type: 'uses_type',       label: 'USES_TYPE',     color: '#DCC8FF', arrow: true },
+  { type: 'coupled_with',    label: 'COUPLED_WITH',  color: '#FFA0A0', arrow: false },
 ];
 
 const DEPTH_OPTIONS: { label: string; value: number | null }[] = [
@@ -68,6 +68,8 @@ export function Filters() {
           <ToggleRow
             key={cfg.type}
             label={cfg.label}
+            edgeColor={cfg.color}
+            edgeArrow={cfg.arrow}
             active={visibleEdgeTypes.has(cfg.type)}
             onToggle={() => toggleEdgeType(cfg.type)}
           />
@@ -170,13 +172,29 @@ function Section({
   );
 }
 
+function EdgeIndicator({ color, arrow, active }: { color: string; arrow: boolean; active: boolean }) {
+  const strokeColor = active ? color : 'var(--text-dimmed)';
+  return (
+    <svg width="20" height="10" viewBox="0 0 20 10" style={{ flexShrink: 0 }}>
+      <line x1="0" y1="5" x2={arrow ? 14 : 20} y2="5" stroke={strokeColor} strokeWidth="2" />
+      {arrow && (
+        <polygon points="14,1 20,5 14,9" fill={strokeColor} />
+      )}
+    </svg>
+  );
+}
+
 function ToggleRow({
   color,
+  edgeColor,
+  edgeArrow,
   label,
   active,
   onToggle,
 }: {
   color?: string;
+  edgeColor?: string;
+  edgeArrow?: boolean;
   label: string;
   active: boolean;
   onToggle: () => void;
@@ -201,16 +219,23 @@ function ToggleRow({
         e.currentTarget.style.background = 'transparent';
       }}
     >
+      {/* Node type: colored dot */}
       {color && (
         <span
           style={{
-            width: 6,
-            height: 6,
+            width: 10,
+            height: 10,
             borderRadius: '50%',
             background: active ? color : 'var(--text-dimmed)',
+            border: `1.5px solid ${active ? 'rgba(255,255,255,0.15)' : 'transparent'}`,
             flexShrink: 0,
           }}
         />
+      )}
+
+      {/* Edge type: colored line/arrow */}
+      {edgeColor && (
+        <EdgeIndicator color={edgeColor} arrow={edgeArrow ?? false} active={active} />
       )}
 
       <span style={{ flex: 1 }}>{label}</span>

@@ -1,7 +1,10 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 import Sigma from 'sigma';
 import type { MultiDirectedGraph } from 'graphology';
+import type { Settings } from 'sigma/settings';
+import type { NodeDisplayData, PartialButFor } from 'sigma/types';
 import { createNodeBorderProgram } from '@sigma/node-border';
+import { EdgeArrowProgram, EdgeRectangleProgram } from 'sigma/rendering';
 import FA2LayoutSupervisor from 'graphology-layout-forceatlas2/worker';
 import circular from 'graphology-layout/circular';
 import circlePack from 'graphology-layout/circlepack';
@@ -11,6 +14,87 @@ import { cn } from '@/lib/utils';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { Minimap } from './Minimap';
+
+/* ── Custom label renderer: dark halo + dynamic font sizing by node importance ── */
+function drawNodeLabelWithHalo(
+  context: CanvasRenderingContext2D,
+  data: PartialButFor<NodeDisplayData, 'x' | 'y' | 'size' | 'label' | 'color'>,
+  settings: Settings,
+): void {
+  if (!data.label) return;
+  const font = settings.labelFont;
+  const weight = settings.labelWeight;
+  const color = settings.labelColor.attribute
+    ? (data as Record<string, unknown>)[settings.labelColor.attribute] as string || settings.labelColor.color || '#E6EDF3'
+    : settings.labelColor.color;
+
+  // Dynamic font size: larger nodes (higher degree) get bigger labels
+  const fontSize = Math.max(10, Math.min(18, 8 + data.size * 0.5));
+
+  context.font = `${weight} ${fontSize}px ${font}`;
+
+  // Strong dark halo for clarity against any background
+  context.strokeStyle = '#000000';
+  context.lineWidth = 3;
+  context.lineJoin = 'round';
+  context.globalAlpha = 0.85;
+  context.strokeText(data.label, data.x + data.size + 3, data.y + fontSize / 3);
+
+  // Fill on top
+  context.fillStyle = color!;
+  context.fillText(data.label, data.x + data.size + 3, data.y + fontSize / 3);
+  context.globalAlpha = 1;
+}
+
+/* ── Custom hover renderer: dark tooltip instead of jarring white ── */
+function drawNodeHoverDark(
+  context: CanvasRenderingContext2D,
+  data: PartialButFor<NodeDisplayData, 'x' | 'y' | 'size' | 'label' | 'color'>,
+  settings: Settings,
+): void {
+  const font = settings.labelFont;
+  const weight = settings.labelWeight;
+  const size = Math.max(10, Math.min(18, 8 + data.size * 0.5));
+  context.font = `${weight} ${size}px ${font}`;
+
+  // Dark background pill
+  context.fillStyle = '#1a2030';
+  context.shadowOffsetX = 0;
+  context.shadowOffsetY = 2;
+  context.shadowBlur = 10;
+  context.shadowColor = 'rgba(0,0,0,0.6)';
+
+  const PADDING = 3;
+  if (typeof data.label === 'string') {
+    const textWidth = context.measureText(data.label).width;
+    const boxWidth = Math.round(textWidth + 6);
+    const boxHeight = Math.round(size + 2 * PADDING);
+    const radius = Math.max(data.size, size / 2) + PADDING;
+    const angleRadian = Math.asin(boxHeight / 2 / radius);
+    const xDeltaCoord = Math.sqrt(Math.abs(radius ** 2 - (boxHeight / 2) ** 2));
+
+    context.beginPath();
+    context.moveTo(data.x + xDeltaCoord, data.y + boxHeight / 2);
+    context.lineTo(data.x + radius + boxWidth, data.y + boxHeight / 2);
+    context.lineTo(data.x + radius + boxWidth, data.y - boxHeight / 2);
+    context.lineTo(data.x + xDeltaCoord, data.y - boxHeight / 2);
+    context.arc(data.x, data.y, radius, angleRadian, -angleRadian);
+    context.closePath();
+    context.fill();
+  } else {
+    context.beginPath();
+    context.arc(data.x, data.y, data.size + PADDING, 0, Math.PI * 2);
+    context.closePath();
+    context.fill();
+  }
+
+  context.shadowOffsetX = 0;
+  context.shadowOffsetY = 0;
+  context.shadowBlur = 0;
+
+  // Draw label with halo
+  drawNodeLabelWithHalo(context, data, settings);
+}
 
 interface GraphCanvasProps {
   className?: string;
@@ -300,20 +384,21 @@ export function GraphCanvas({ className }: GraphCanvasProps) {
       layout.stop();
       setLayoutRunning(false);
     } else {
-      // Kill the stale supervisor and create a fresh one with weaker settings.
-      // This resets FA2's internal speed accumulator, preventing vibration on
-      // resume after the layout has already converged.
+      // Kill the stale supervisor and create a fresh one. This resets FA2's
+      // internal speed accumulator, preventing vibration on resume after the
+      // layout has already converged. Settings match initial run but with
+      // higher slowDown for gentler refinement.
       layout.kill();
       const fresh = new FA2LayoutSupervisor(graph, {
         settings: {
-          gravity: 0.5,
+          gravity: 1,
           scalingRatio: 5,
-          strongGravityMode: false,
+          strongGravityMode: true,
           linLogMode: false,
           outboundAttractionDistribution: true,
           barnesHutOptimize: true,
           barnesHutTheta: 0.5,
-          slowDown: 15,
+          slowDown: 20,
         },
       });
       fresh.start();
@@ -339,7 +424,8 @@ export function GraphCanvas({ className }: GraphCanvasProps) {
     // Sigma to re-invoke the reducers with fresh closure values.
     const BorderedNodeProgram = createNodeBorderProgram({
       borders: [
-        { size: { value: 0.15, mode: 'relative' }, color: { attribute: 'borderColor', defaultValue: '#5a6a7a' } },
+        { size: { value: 0.06, mode: 'relative' }, color: { attribute: '_outlineColor', defaultValue: '#0a0a0a' } },
+        { size: { value: 0.14, mode: 'relative' }, color: { attribute: 'borderColor', defaultValue: '#5a6a7a' } },
         { size: { fill: true }, color: { attribute: 'color' } },
       ],
     });
@@ -347,18 +433,26 @@ export function GraphCanvas({ className }: GraphCanvasProps) {
     const sigma = new Sigma(graph, container, {
       renderLabels: true,
       labelFont: 'JetBrains Mono, monospace',
-      labelSize: 11,
+      labelSize: 12,
       labelWeight: '500',
-      labelColor: { color: '#8899aa' },
+      labelColor: { color: '#E6EDF3' },
       defaultEdgeColor: '#2a3a4d',
       defaultNodeColor: '#4a5a6a',
       labelRenderedSizeThreshold: 12,
-      labelDensity: 0.5,
-      labelGridCellSize: 120,
+      labelDensity: 0.15,
+      labelGridCellSize: 200,
+      defaultDrawNodeLabel: drawNodeLabelWithHalo,
+      defaultDrawNodeHover: drawNodeHoverDark,
+      zoomToSizeRatioFunction: (r: number) => Math.max(r, 0.15),
       hideEdgesOnMove: true,
       defaultNodeType: 'bordered',
       nodeProgramClasses: {
         bordered: BorderedNodeProgram,
+      },
+      defaultEdgeType: 'rectangle',
+      edgeProgramClasses: {
+        arrow: EdgeArrowProgram,
+        rectangle: EdgeRectangleProgram,
       },
 
       nodeReducer: (node, data) => {
@@ -410,7 +504,34 @@ export function GraphCanvas({ className }: GraphCanvasProps) {
           res.zIndex = 3;
         }
 
-        if (state.hoveredNodeId && node === state.hoveredNodeId) {
+        // Focus mode: hovering restores full saturation + fades non-neighbors
+        if (state.hoveredNodeId && !state.selectedNodeId) {
+          if (node === state.hoveredNodeId) {
+            // Restore full saturation on hovered node — only this node gets forceLabel
+            res.color = (data as Record<string, unknown>)._saturatedColor as string || res.color;
+            res.borderColor = (data as Record<string, unknown>)._saturatedBorder as string || res.borderColor;
+            res.highlighted = true;
+            res.forceLabel = true;
+            res.zIndex = 3;
+          } else {
+            const isNeighbor =
+              graph.hasEdge(state.hoveredNodeId, node) ||
+              graph.hasEdge(node, state.hoveredNodeId);
+            if (isNeighbor) {
+              // Neighbors get full saturation but NO forceLabel (prevents label pile-up)
+              res.color = (data as Record<string, unknown>)._saturatedColor as string || res.color;
+              res.borderColor = (data as Record<string, unknown>)._saturatedBorder as string || res.borderColor;
+              res.zIndex = 2;
+            } else {
+              res.color = '#1a2030';
+              res.borderColor = '#1a2030';
+              res.label = '';
+              res.zIndex = 0;
+            }
+          }
+        } else if (state.hoveredNodeId && node === state.hoveredNodeId) {
+          res.color = (data as Record<string, unknown>)._saturatedColor as string || res.color;
+          res.borderColor = (data as Record<string, unknown>)._saturatedBorder as string || res.borderColor;
           res.highlighted = true;
           res.forceLabel = true;
         }
@@ -432,8 +553,8 @@ export function GraphCanvas({ className }: GraphCanvasProps) {
           const source = graph.source(edge);
           const target = graph.target(edge);
           if (state.highlightedNodeIds.has(source) && state.highlightedNodeIds.has(target)) {
-            res.color = '#4488cc';
-            res.size = 1.2;
+            // Keep per-type color, just boost size for emphasis
+            res.size = 1.0;
           } else {
             res.hidden = true;
           }
@@ -446,8 +567,19 @@ export function GraphCanvas({ className }: GraphCanvasProps) {
           if (source !== state.selectedNodeId && target !== state.selectedNodeId) {
             res.hidden = true;
           } else {
-            res.color = '#4488cc';
-            res.size = 1.5;
+            // Keep per-type color, just boost size for emphasis
+            res.size = 1.2;
+          }
+        }
+
+        // Focus mode: hovering fades non-neighbor edges when no selection active
+        if (state.hoveredNodeId && !state.selectedNodeId) {
+          const source = graph.source(edge);
+          const target = graph.target(edge);
+          if (source !== state.hoveredNodeId && target !== state.hoveredNodeId) {
+            res.hidden = true;
+          } else {
+            res.size = 1.2;
           }
         }
 
@@ -659,7 +791,10 @@ export function GraphCanvas({ className }: GraphCanvasProps) {
   }
 
   return (
-    <div className={cn('relative w-full h-full', className)} style={{ background: 'var(--bg-primary)' }}>
+    <div
+      className={cn('relative w-full h-full', className)}
+      style={{ background: 'radial-gradient(ellipse at 50% 50%, #0F1620 0%, #0A0E14 70%)' }}
+    >
       <div ref={containerRef} className="w-full h-full" />
       <GraphControls
         onZoomIn={zoomIn}

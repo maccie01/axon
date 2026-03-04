@@ -1,0 +1,2131 @@
+{
+  "meta": {
+    "source": "docshield-snapshot",
+    "files": 18,
+    "symbols": 108,
+    "relationships": 380,
+    "dead_code": 22
+  },
+  "symbols": [
+    {
+      "file": "src/docshield/cli.py",
+      "name": "_add_sanitize_args",
+      "kind": "function",
+      "line": 25,
+      "signature": "def _add_sanitize_args(parser: argparse.ArgumentParser) -> None",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": ""
+    },
+    {
+      "file": "src/docshield/cli.py",
+      "name": "_build_parser",
+      "kind": "function",
+      "line": 56,
+      "signature": "def _build_parser() -> argparse.ArgumentParser",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": ""
+    },
+    {
+      "file": "src/docshield/cli.py",
+      "name": "_build_main_parser",
+      "kind": "function",
+      "line": 105,
+      "signature": "def _build_main_parser() -> argparse.ArgumentParser",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": ""
+    },
+    {
+      "file": "src/docshield/cli.py",
+      "name": "_build_restore_parser",
+      "kind": "function",
+      "line": 109,
+      "signature": "def _build_restore_parser() -> argparse.ArgumentParser",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": ""
+    },
+    {
+      "file": "src/docshield/cli.py",
+      "name": "_get_console",
+      "kind": "function",
+      "line": 131,
+      "signature": "def _get_console()",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": ""
+    },
+    {
+      "file": "src/docshield/cli.py",
+      "name": "_info",
+      "kind": "function",
+      "line": 139,
+      "signature": "def _info(console, msg: str) -> None",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": ""
+    },
+    {
+      "file": "src/docshield/cli.py",
+      "name": "_cmd_sanitize",
+      "kind": "function",
+      "line": 152,
+      "signature": "def _cmd_sanitize(args: argparse.Namespace) -> int",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": ""
+    },
+    {
+      "file": "src/docshield/cli.py",
+      "name": "on_progress",
+      "kind": "function",
+      "line": 227,
+      "signature": "def on_progress(result: object) -> None",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": ""
+    },
+    {
+      "file": "src/docshield/cli.py",
+      "name": "_cmd_restore",
+      "kind": "function",
+      "line": 278,
+      "signature": "def _cmd_restore(args: argparse.Namespace) -> int",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": ""
+    },
+    {
+      "file": "src/docshield/cli.py",
+      "name": "_cmd_status",
+      "kind": "function",
+      "line": 310,
+      "signature": "def _cmd_status(args: argparse.Namespace) -> int",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": ""
+    },
+    {
+      "file": "src/docshield/cli.py",
+      "name": "main",
+      "kind": "function",
+      "line": 366,
+      "signature": "def main(argv: list[str] | None = None) -> int",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": ""
+    },
+    {
+      "file": "src/docshield/cli.py",
+      "name": "restore",
+      "kind": "function",
+      "line": 397,
+      "signature": "def restore(argv: list[str] | None = None) -> int",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": ""
+    },
+    {
+      "file": "src/docshield/config.py",
+      "name": "PipelineConfig",
+      "kind": "class",
+      "line": 32,
+      "signature": "",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": ""
+    },
+    {
+      "file": "src/docshield/engine/_worker.py",
+      "name": "_emit",
+      "kind": "function",
+      "line": 26,
+      "signature": "def _emit(**kwargs: object) -> None",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": ""
+    },
+    {
+      "file": "src/docshield/engine/_worker.py",
+      "name": "_run",
+      "kind": "function",
+      "line": 31,
+      "signature": "def _run(cfg_json: dict) -> None",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": ""
+    },
+    {
+      "file": "src/docshield/engine/_worker.py",
+      "name": "on_start",
+      "kind": "function",
+      "line": 81,
+      "signature": "def on_start(name: str) -> None",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": ""
+    },
+    {
+      "file": "src/docshield/engine/_worker.py",
+      "name": "on_progress",
+      "kind": "function",
+      "line": 86,
+      "signature": "def on_progress(result) -> None",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": ""
+    },
+    {
+      "file": "src/docshield/engine/_worker.py",
+      "name": "main",
+      "kind": "function",
+      "line": 123,
+      "signature": "def main() -> None",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": ""
+    },
+    {
+      "file": "src/docshield/engine/blocklist.py",
+      "name": "_is_numeric_token",
+      "kind": "function",
+      "line": 272,
+      "signature": "def _is_numeric_token(word: str) -> bool",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": ""
+    },
+    {
+      "file": "src/docshield/engine/blocklist.py",
+      "name": "is_blocked",
+      "kind": "function",
+      "line": 278,
+      "signature": "def is_blocked(text: str, normalized_label: str) -> bool",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": ""
+    },
+    {
+      "file": "src/docshield/engine/custom_terms.py",
+      "name": "load_custom_terms",
+      "kind": "function",
+      "line": 25,
+      "signature": "def load_custom_terms(path: Path | None) -> list[tuple[str, str]]",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": ""
+    },
+    {
+      "file": "src/docshield/engine/extractor.py",
+      "name": "_build_converter",
+      "kind": "function",
+      "line": 17,
+      "signature": "def _build_converter(\n    ocr_languages: Sequence[str] = DEFAULT_OCR_LANGUAGES,\n)",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": ""
+    },
+    {
+      "file": "src/docshield/engine/extractor.py",
+      "name": "DocumentExtractor",
+      "kind": "class",
+      "line": 48,
+      "signature": "",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": ""
+    },
+    {
+      "file": "src/docshield/engine/extractor.py",
+      "name": "__init__",
+      "kind": "method",
+      "line": 51,
+      "signature": "def __init__(\n        self,\n        ocr_languages: Sequence[str] = DEFAULT_OCR_LANGUAGES,\n    ) -> None",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": "DocumentExtractor"
+    },
+    {
+      "file": "src/docshield/engine/extractor.py",
+      "name": "pdf_to_markdown",
+      "kind": "method",
+      "line": 66,
+      "signature": "def pdf_to_markdown(self, file_path: Path) -> str",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": "DocumentExtractor"
+    },
+    {
+      "file": "src/docshield/engine/patterns.py",
+      "name": "PatternMatch",
+      "kind": "class",
+      "line": 15,
+      "signature": "",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": ""
+    },
+    {
+      "file": "src/docshield/engine/patterns.py",
+      "name": "_get_abbrev_name_reject",
+      "kind": "function",
+      "line": 67,
+      "signature": "def _get_abbrev_name_reject() -> frozenset[str]",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": ""
+    },
+    {
+      "file": "src/docshield/engine/patterns.py",
+      "name": "_is_likely_surname",
+      "kind": "function",
+      "line": 82,
+      "signature": "def _is_likely_surname(word: str) -> bool",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": ""
+    },
+    {
+      "file": "src/docshield/engine/patterns.py",
+      "name": "detect_patterns",
+      "kind": "function",
+      "line": 90,
+      "signature": "def detect_patterns(text: str) -> list[PatternMatch]",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": ""
+    },
+    {
+      "file": "src/docshield/engine/postprocessor.py",
+      "name": "_is_diagram_fragment",
+      "kind": "function",
+      "line": 20,
+      "signature": "def _is_diagram_fragment(line: str) -> bool",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": ""
+    },
+    {
+      "file": "src/docshield/engine/postprocessor.py",
+      "name": "_clean_image_regions",
+      "kind": "function",
+      "line": 37,
+      "signature": "def _clean_image_regions(text: str) -> str",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": ""
+    },
+    {
+      "file": "src/docshield/engine/postprocessor.py",
+      "name": "_collapse_duplicate_columns",
+      "kind": "function",
+      "line": 81,
+      "signature": "def _collapse_duplicate_columns(text: str) -> str",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": ""
+    },
+    {
+      "file": "src/docshield/engine/postprocessor.py",
+      "name": "_normalize_whitespace",
+      "kind": "function",
+      "line": 125,
+      "signature": "def _normalize_whitespace(text: str) -> str",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": ""
+    },
+    {
+      "file": "src/docshield/engine/postprocessor.py",
+      "name": "postprocess_markdown",
+      "kind": "function",
+      "line": 130,
+      "signature": "def postprocess_markdown(text: str) -> str",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": ""
+    },
+    {
+      "file": "src/docshield/engine/sanitizer.py",
+      "name": "IntelligentSanitizer",
+      "kind": "class",
+      "line": 42,
+      "signature": "",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": ""
+    },
+    {
+      "file": "src/docshield/engine/sanitizer.py",
+      "name": "__init__",
+      "kind": "method",
+      "line": 54,
+      "signature": "def __init__(\n        self,\n        labels: Iterable[str] | None = None,\n        model_id: str = DEFAULT_MODEL_ID,\n        min_confidence: float = DEFAULT_MIN_CONFIDENCE,\n        chunk_separator: str = \"\\n\\n\",\n        custom_terms: list[tuple[str, str]] | None = None,\n    ) -> None",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": "IntelligentSanitizer"
+    },
+    {
+      "file": "src/docshield/engine/sanitizer.py",
+      "name": "_resolve_cached_model",
+      "kind": "method",
+      "line": 83,
+      "signature": "def _resolve_cached_model(model_id: str) -> str",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": "IntelligentSanitizer"
+    },
+    {
+      "file": "src/docshield/engine/sanitizer.py",
+      "name": "_suppress_library_warnings",
+      "kind": "method",
+      "line": 112,
+      "signature": "def _suppress_library_warnings() -> None",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": "IntelligentSanitizer"
+    },
+    {
+      "file": "src/docshield/engine/sanitizer.py",
+      "name": "_apply_custom_terms",
+      "kind": "method",
+      "line": 143,
+      "signature": "def _apply_custom_terms(\n        self,\n        text: str,\n        entity_key_to_flag: dict[tuple[str, str], str],\n        flag_to_entity: dict[str, str],\n        label_counters: dict[str, int],\n    ) -> str",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": "IntelligentSanitizer"
+    },
+    {
+      "file": "src/docshield/engine/sanitizer.py",
+      "name": "_normalize_label",
+      "kind": "method",
+      "line": 167,
+      "signature": "def _normalize_label(label: str) -> str",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": "IntelligentSanitizer"
+    },
+    {
+      "file": "src/docshield/engine/sanitizer.py",
+      "name": "_apply_replacements",
+      "kind": "method",
+      "line": 171,
+      "signature": "def _apply_replacements(\n        self,\n        text: str,\n        entities: list[dict[str, object]],\n        entity_key_to_flag: dict[tuple[str, str], str],\n        flag_to_entity: dict[str, str],\n        label_counters: dict[str, int],\n    ) -> str",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": "IntelligentSanitizer"
+    },
+    {
+      "file": "src/docshield/engine/sanitizer.py",
+      "name": "_filter_by_confidence",
+      "kind": "method",
+      "line": 199,
+      "signature": "def _filter_by_confidence(\n        self,\n        entities: list[dict[str, object]],\n    ) -> list[dict[str, object]]",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": "IntelligentSanitizer"
+    },
+    {
+      "file": "src/docshield/engine/sanitizer.py",
+      "name": "_filter_blocked",
+      "kind": "method",
+      "line": 217,
+      "signature": "def _filter_blocked(\n        entities: list[dict[str, object]],\n    ) -> list[dict[str, object]]",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": "IntelligentSanitizer"
+    },
+    {
+      "file": "src/docshield/engine/sanitizer.py",
+      "name": "sanitize",
+      "kind": "method",
+      "line": 232,
+      "signature": "def sanitize(self, text: str) -> tuple[str, dict[str, str]]",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": "IntelligentSanitizer"
+    },
+    {
+      "file": "src/docshield/engine/sanitizer.py",
+      "name": "_is_likely_proper_name",
+      "kind": "method",
+      "line": 306,
+      "signature": "def _is_likely_proper_name(token: str) -> bool",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": "IntelligentSanitizer"
+    },
+    {
+      "file": "src/docshield/engine/sanitizer.py",
+      "name": "_collect_propagation_tokens",
+      "kind": "method",
+      "line": 321,
+      "signature": "def _collect_propagation_tokens(\n        flag_to_entity: dict[str, str],\n    ) -> dict[str, str]",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": "IntelligentSanitizer"
+    },
+    {
+      "file": "src/docshield/engine/sanitizer.py",
+      "name": "_consistency_scan",
+      "kind": "method",
+      "line": 376,
+      "signature": "def _consistency_scan(\n        self,\n        text: str,\n        entity_key_to_flag: dict[tuple[str, str], str],\n        flag_to_entity: dict[str, str],\n        label_counters: dict[str, int],\n    ) -> str",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": "IntelligentSanitizer"
+    },
+    {
+      "file": "src/docshield/engine/sanitizer.py",
+      "name": "_propagate_confirmed_entities",
+      "kind": "method",
+      "line": 430,
+      "signature": "def _propagate_confirmed_entities(\n        text: str,\n        entity_key_to_flag: dict[tuple[str, str], str],\n        flag_to_entity: dict[str, str],\n    ) -> str",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": "IntelligentSanitizer"
+    },
+    {
+      "file": "src/docshield/engine/sanitizer.py",
+      "name": "_looks_garbled",
+      "kind": "method",
+      "line": 479,
+      "signature": "def _looks_garbled(text: str) -> bool",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": "IntelligentSanitizer"
+    },
+    {
+      "file": "src/docshield/engine/sanitizer.py",
+      "name": "_validate_vault",
+      "kind": "method",
+      "line": 492,
+      "signature": "def _validate_vault(\n        flag_to_entity: dict[str, str],\n        entity_key_to_flag: dict[tuple[str, str], str],\n    ) -> dict[str, str]",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": "IntelligentSanitizer"
+    },
+    {
+      "file": "src/docshield/engine/sanitizer.py",
+      "name": "_inside_flag",
+      "kind": "method",
+      "line": 510,
+      "signature": "def _inside_flag(text: str, start: int, end: int) -> bool",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": "IntelligentSanitizer"
+    },
+    {
+      "file": "src/docshield/interactive.py",
+      "name": "_dir_files",
+      "kind": "function",
+      "line": 74,
+      "signature": "def _dir_files(path: Path, pred) -> list[Path]",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": ""
+    },
+    {
+      "file": "src/docshield/interactive.py",
+      "name": "_state",
+      "kind": "function",
+      "line": 80,
+      "signature": "def _state(cfg: PipelineConfig) -> dict[str, list[Path]]",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": ""
+    },
+    {
+      "file": "src/docshield/interactive.py",
+      "name": "_file_summary",
+      "kind": "function",
+      "line": 91,
+      "signature": "def _file_summary(files: list[Path], label: str) -> str",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": ""
+    },
+    {
+      "file": "src/docshield/interactive.py",
+      "name": "_human_size",
+      "kind": "function",
+      "line": 103,
+      "signature": "def _human_size(n: int) -> str",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": ""
+    },
+    {
+      "file": "src/docshield/interactive.py",
+      "name": "_copy_to_clipboard",
+      "kind": "function",
+      "line": 111,
+      "signature": "def _copy_to_clipboard(text: str) -> bool",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": ""
+    },
+    {
+      "file": "src/docshield/interactive.py",
+      "name": "_read_prompt",
+      "kind": "function",
+      "line": 130,
+      "signature": "def _read_prompt(name: str) -> str | None",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": ""
+    },
+    {
+      "file": "src/docshield/interactive.py",
+      "name": "DocShieldApp",
+      "kind": "class",
+      "line": 142,
+      "signature": "",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": ""
+    },
+    {
+      "file": "src/docshield/interactive.py",
+      "name": "__init__",
+      "kind": "method",
+      "line": 177,
+      "signature": "def __init__(self, cfg: PipelineConfig) -> None",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": "DocShieldApp"
+    },
+    {
+      "file": "src/docshield/interactive.py",
+      "name": "get_system_commands",
+      "kind": "method",
+      "line": 182,
+      "signature": "def get_system_commands(\n        self, screen: object,\n    ) -> Generator[SystemCommand, None, None]",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": "DocShieldApp"
+    },
+    {
+      "file": "src/docshield/interactive.py",
+      "name": "compose",
+      "kind": "method",
+      "line": 192,
+      "signature": "def compose(self) -> ComposeResult",
+      "is_dead": true,
+      "is_exported": false,
+      "class_name": "DocShieldApp"
+    },
+    {
+      "file": "src/docshield/interactive.py",
+      "name": "on_mount",
+      "kind": "method",
+      "line": 231,
+      "signature": "def on_mount(self) -> None",
+      "is_dead": true,
+      "is_exported": false,
+      "class_name": "DocShieldApp"
+    },
+    {
+      "file": "src/docshield/interactive.py",
+      "name": "_refresh_file_status",
+      "kind": "method",
+      "line": 236,
+      "signature": "def _refresh_file_status(self) -> None",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": "DocShieldApp"
+    },
+    {
+      "file": "src/docshield/interactive.py",
+      "name": "action_refresh_status",
+      "kind": "method",
+      "line": 248,
+      "signature": "def action_refresh_status(self) -> None",
+      "is_dead": true,
+      "is_exported": false,
+      "class_name": "DocShieldApp"
+    },
+    {
+      "file": "src/docshield/interactive.py",
+      "name": "action_toggle_help",
+      "kind": "method",
+      "line": 252,
+      "signature": "def action_toggle_help(self) -> None",
+      "is_dead": true,
+      "is_exported": false,
+      "class_name": "DocShieldApp"
+    },
+    {
+      "file": "src/docshield/interactive.py",
+      "name": "action_sanitize",
+      "kind": "method",
+      "line": 258,
+      "signature": "def action_sanitize(self) -> None",
+      "is_dead": true,
+      "is_exported": false,
+      "class_name": "DocShieldApp"
+    },
+    {
+      "file": "src/docshield/interactive.py",
+      "name": "_run_sanitize",
+      "kind": "method",
+      "line": 270,
+      "signature": "def _run_sanitize(self) -> None",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": "DocShieldApp"
+    },
+    {
+      "file": "src/docshield/interactive.py",
+      "name": "_exec_worker",
+      "kind": "method",
+      "line": 281,
+      "signature": "def _exec_worker(self, log: RichLog) -> None",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": "DocShieldApp"
+    },
+    {
+      "file": "src/docshield/interactive.py",
+      "name": "_worker_msg",
+      "kind": "method",
+      "line": 322,
+      "signature": "def _worker_msg(self, m: dict, log: RichLog) -> None",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": "DocShieldApp"
+    },
+    {
+      "file": "src/docshield/interactive.py",
+      "name": "_sanitize_done",
+      "kind": "method",
+      "line": 353,
+      "signature": "def _sanitize_done(self) -> None",
+      "is_dead": true,
+      "is_exported": false,
+      "class_name": "DocShieldApp"
+    },
+    {
+      "file": "src/docshield/interactive.py",
+      "name": "_sanitize_error",
+      "kind": "method",
+      "line": 361,
+      "signature": "def _sanitize_error(self, msg: str) -> None",
+      "is_dead": true,
+      "is_exported": false,
+      "class_name": "DocShieldApp"
+    },
+    {
+      "file": "src/docshield/interactive.py",
+      "name": "action_prompts",
+      "kind": "method",
+      "line": 369,
+      "signature": "def action_prompts(self) -> None",
+      "is_dead": true,
+      "is_exported": false,
+      "class_name": "DocShieldApp"
+    },
+    {
+      "file": "src/docshield/interactive.py",
+      "name": "action_prompt_base",
+      "kind": "method",
+      "line": 405,
+      "signature": "def action_prompt_base(self) -> None",
+      "is_dead": true,
+      "is_exported": false,
+      "class_name": "DocShieldApp"
+    },
+    {
+      "file": "src/docshield/interactive.py",
+      "name": "action_prompt_compare",
+      "kind": "method",
+      "line": 415,
+      "signature": "def action_prompt_compare(self) -> None",
+      "is_dead": true,
+      "is_exported": false,
+      "class_name": "DocShieldApp"
+    },
+    {
+      "file": "src/docshield/interactive.py",
+      "name": "action_prompt_summarize",
+      "kind": "method",
+      "line": 418,
+      "signature": "def action_prompt_summarize(self) -> None",
+      "is_dead": true,
+      "is_exported": false,
+      "class_name": "DocShieldApp"
+    },
+    {
+      "file": "src/docshield/interactive.py",
+      "name": "action_prompt_extract",
+      "kind": "method",
+      "line": 421,
+      "signature": "def action_prompt_extract(self) -> None",
+      "is_dead": true,
+      "is_exported": false,
+      "class_name": "DocShieldApp"
+    },
+    {
+      "file": "src/docshield/interactive.py",
+      "name": "_copy_prompt_with_docs",
+      "kind": "method",
+      "line": 426,
+      "signature": "def _copy_prompt_with_docs(self, name: str, label: str) -> None",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": "DocShieldApp"
+    },
+    {
+      "file": "src/docshield/interactive.py",
+      "name": "_clipboard_approach",
+      "kind": "method",
+      "line": 445,
+      "signature": "def _clipboard_approach(\n        self, prompt: str, files: list[Path], label: str,\n    ) -> None",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": "DocShieldApp"
+    },
+    {
+      "file": "src/docshield/interactive.py",
+      "name": "_file_approach",
+      "kind": "method",
+      "line": 467,
+      "signature": "def _file_approach(\n        self, prompt: str, files: list[Path], label: str,\n    ) -> None",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": "DocShieldApp"
+    },
+    {
+      "file": "src/docshield/interactive.py",
+      "name": "_prompt_feedback",
+      "kind": "method",
+      "line": 514,
+      "signature": "def _prompt_feedback(\n        self, label: str, *, clipboard_only: bool = False, extra: str = \"\",\n    ) -> None",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": "DocShieldApp"
+    },
+    {
+      "file": "src/docshield/interactive.py",
+      "name": "action_restore",
+      "kind": "method",
+      "line": 542,
+      "signature": "def action_restore(self) -> None",
+      "is_dead": true,
+      "is_exported": false,
+      "class_name": "DocShieldApp"
+    },
+    {
+      "file": "src/docshield/interactive.py",
+      "name": "action_clean",
+      "kind": "method",
+      "line": 614,
+      "signature": "def action_clean(self) -> None",
+      "is_dead": true,
+      "is_exported": false,
+      "class_name": "DocShieldApp"
+    },
+    {
+      "file": "src/docshield/interactive.py",
+      "name": "_do_clean",
+      "kind": "method",
+      "line": 629,
+      "signature": "def _do_clean(self, targets: list[str]) -> None",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": "DocShieldApp"
+    },
+    {
+      "file": "src/docshield/interactive.py",
+      "name": "action_clean_output",
+      "kind": "method",
+      "line": 671,
+      "signature": "def action_clean_output(self) -> None",
+      "is_dead": true,
+      "is_exported": false,
+      "class_name": "DocShieldApp"
+    },
+    {
+      "file": "src/docshield/interactive.py",
+      "name": "action_clean_mapping",
+      "kind": "method",
+      "line": 676,
+      "signature": "def action_clean_mapping(self) -> None",
+      "is_dead": true,
+      "is_exported": false,
+      "class_name": "DocShieldApp"
+    },
+    {
+      "file": "src/docshield/interactive.py",
+      "name": "action_clean_llm",
+      "kind": "method",
+      "line": 681,
+      "signature": "def action_clean_llm(self) -> None",
+      "is_dead": true,
+      "is_exported": false,
+      "class_name": "DocShieldApp"
+    },
+    {
+      "file": "src/docshield/interactive.py",
+      "name": "action_clean_all",
+      "kind": "method",
+      "line": 686,
+      "signature": "def action_clean_all(self) -> None",
+      "is_dead": true,
+      "is_exported": false,
+      "class_name": "DocShieldApp"
+    },
+    {
+      "file": "src/docshield/interactive.py",
+      "name": "run",
+      "kind": "function",
+      "line": 696,
+      "signature": "def run(cfg: PipelineConfig) -> int",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": ""
+    },
+    {
+      "file": "src/docshield/log.py",
+      "name": "_JsonFormatter",
+      "kind": "class",
+      "line": 17,
+      "signature": "",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": ""
+    },
+    {
+      "file": "src/docshield/log.py",
+      "name": "format",
+      "kind": "method",
+      "line": 20,
+      "signature": "def format(self, record: logging.LogRecord) -> str",
+      "is_dead": true,
+      "is_exported": false,
+      "class_name": "_JsonFormatter"
+    },
+    {
+      "file": "src/docshield/log.py",
+      "name": "setup_logging",
+      "kind": "function",
+      "line": 32,
+      "signature": "def setup_logging(\n    log_dir: Path | None = None,\n    verbose: bool = False,\n) -> logging.Logger",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": ""
+    },
+    {
+      "file": "src/docshield/log.py",
+      "name": "reset_logging",
+      "kind": "function",
+      "line": 71,
+      "signature": "def reset_logging() -> None",
+      "is_dead": true,
+      "is_exported": false,
+      "class_name": ""
+    },
+    {
+      "file": "src/docshield/log.py",
+      "name": "get_logger",
+      "kind": "function",
+      "line": 81,
+      "signature": "def get_logger(name: str = \"docshield\") -> logging.Logger",
+      "is_dead": true,
+      "is_exported": false,
+      "class_name": ""
+    },
+    {
+      "file": "src/docshield/models.py",
+      "name": "RunResult",
+      "kind": "class",
+      "line": 9,
+      "signature": "",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": ""
+    },
+    {
+      "file": "src/docshield/models.py",
+      "name": "succeeded",
+      "kind": "method",
+      "line": 17,
+      "signature": "def succeeded(self) -> bool",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": "RunResult"
+    },
+    {
+      "file": "src/docshield/pipeline.py",
+      "name": "collect_pdfs",
+      "kind": "function",
+      "line": 24,
+      "signature": "def collect_pdfs(input_dir: Path) -> list[Path]",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": ""
+    },
+    {
+      "file": "src/docshield/pipeline.py",
+      "name": "ensure_directories",
+      "kind": "function",
+      "line": 36,
+      "signature": "def ensure_directories(paths: Iterable[Path]) -> None",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": ""
+    },
+    {
+      "file": "src/docshield/pipeline.py",
+      "name": "process_documents",
+      "kind": "function",
+      "line": 41,
+      "signature": "def process_documents(\n    input_dir: Path,\n    output_dir: Path,\n    mapping_dir: Path,\n    extractor: DocumentExtractor,\n    sanitizer: IntelligentSanitizer,\n    on_progress: Callable[[RunResult], None] | None = None,\n    on_start: Callable[[str], None] | None = None,\n) -> list[RunResult]",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": ""
+    },
+    {
+      "file": "src/docshield/reporting.py",
+      "name": "print_report",
+      "kind": "function",
+      "line": 16,
+      "signature": "def print_report(results: Sequence[RunResult]) -> None",
+      "is_dead": true,
+      "is_exported": false,
+      "class_name": ""
+    },
+    {
+      "file": "src/docshield/reporting.py",
+      "name": "_print_plain",
+      "kind": "function",
+      "line": 48,
+      "signature": "def _print_plain(results: Sequence[RunResult]) -> None",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": ""
+    },
+    {
+      "file": "src/docshield/restore.py",
+      "name": "build_master_vault",
+      "kind": "function",
+      "line": 13,
+      "signature": "def build_master_vault(mapping_dir: Path) -> dict[str, str]",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": ""
+    },
+    {
+      "file": "src/docshield/restore.py",
+      "name": "_normalize_escaped_flags",
+      "kind": "function",
+      "line": 46,
+      "signature": "def _normalize_escaped_flags(text: str) -> str",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": ""
+    },
+    {
+      "file": "src/docshield/restore.py",
+      "name": "_unescape",
+      "kind": "function",
+      "line": 55,
+      "signature": "def _unescape(m: re.Match[str]) -> str",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": ""
+    },
+    {
+      "file": "src/docshield/restore.py",
+      "name": "restore_text",
+      "kind": "function",
+      "line": 61,
+      "signature": "def restore_text(text: str, vault: dict[str, str], *, bold: bool = False) -> str",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": ""
+    },
+    {
+      "file": "src/docshield/restore.py",
+      "name": "collect_llm_files",
+      "kind": "function",
+      "line": 74,
+      "signature": "def collect_llm_files(llm_dir: Path) -> list[Path]",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": ""
+    },
+    {
+      "file": "src/docshield/restore.py",
+      "name": "RestoreResult",
+      "kind": "class",
+      "line": 85,
+      "signature": "",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": ""
+    },
+    {
+      "file": "src/docshield/restore.py",
+      "name": "restore_file",
+      "kind": "function",
+      "line": 92,
+      "signature": "def restore_file(\n    input_path: Path,\n    output_dir: Path,\n    vault: dict[str, str],\n    *,\n    bold: bool = True,\n) -> RestoreResult",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": ""
+    },
+    {
+      "file": "src/docshield/restore.py",
+      "name": "run_restorer",
+      "kind": "function",
+      "line": 113,
+      "signature": "def run_restorer(\n    mapping_dir: Path = Path(\"mapping\"),\n    input_path: Path = Path(\"llm_responses\"),\n    output_dir: Path = Path(\"output\"),\n    *,\n    bold: bool = True,\n) -> int",
+      "is_dead": false,
+      "is_exported": false,
+      "class_name": ""
+    }
+  ],
+  "calls": [
+    {
+      "caller_file": "src/docshield/cli.py",
+      "caller_name": "_build_main_parser",
+      "callee_file": "src/docshield/cli.py",
+      "callee_name": "_build_parser",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/cli.py",
+      "caller_name": "_build_parser",
+      "callee_file": "src/docshield/cli.py",
+      "callee_name": "_add_sanitize_args",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/cli.py",
+      "caller_name": "_cmd_restore",
+      "callee_file": "src/docshield/cli.py",
+      "callee_name": "_get_console",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/cli.py",
+      "caller_name": "_cmd_restore",
+      "callee_file": "src/docshield/cli.py",
+      "callee_name": "_info",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/cli.py",
+      "caller_name": "_cmd_restore",
+      "callee_file": "src/docshield/restore.py",
+      "callee_name": "run_restorer",
+      "confidence": 0.5
+    },
+    {
+      "caller_file": "src/docshield/cli.py",
+      "caller_name": "_cmd_restore",
+      "callee_file": "src/docshield/log.py",
+      "callee_name": "setup_logging",
+      "confidence": 0.5
+    },
+    {
+      "caller_file": "src/docshield/cli.py",
+      "caller_name": "_cmd_sanitize",
+      "callee_file": "src/docshield/engine/extractor.py",
+      "callee_name": "DocumentExtractor",
+      "confidence": 0.5
+    },
+    {
+      "caller_file": "src/docshield/cli.py",
+      "caller_name": "_cmd_sanitize",
+      "callee_file": "src/docshield/engine/sanitizer.py",
+      "callee_name": "IntelligentSanitizer",
+      "confidence": 0.5
+    },
+    {
+      "caller_file": "src/docshield/cli.py",
+      "caller_name": "_cmd_sanitize",
+      "callee_file": "src/docshield/config.py",
+      "callee_name": "PipelineConfig",
+      "confidence": 0.5
+    },
+    {
+      "caller_file": "src/docshield/cli.py",
+      "caller_name": "_cmd_sanitize",
+      "callee_file": "src/docshield/cli.py",
+      "callee_name": "_get_console",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/cli.py",
+      "caller_name": "_cmd_sanitize",
+      "callee_file": "src/docshield/cli.py",
+      "callee_name": "_info",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/cli.py",
+      "caller_name": "_cmd_sanitize",
+      "callee_file": "src/docshield/pipeline.py",
+      "callee_name": "collect_pdfs",
+      "confidence": 0.5
+    },
+    {
+      "caller_file": "src/docshield/cli.py",
+      "caller_name": "_cmd_sanitize",
+      "callee_file": "src/docshield/pipeline.py",
+      "callee_name": "ensure_directories",
+      "confidence": 0.5
+    },
+    {
+      "caller_file": "src/docshield/cli.py",
+      "caller_name": "_cmd_sanitize",
+      "callee_file": "src/docshield/engine/custom_terms.py",
+      "callee_name": "load_custom_terms",
+      "confidence": 0.5
+    },
+    {
+      "caller_file": "src/docshield/cli.py",
+      "caller_name": "_cmd_sanitize",
+      "callee_file": "src/docshield/cli.py",
+      "callee_name": "on_progress",
+      "confidence": 0.8
+    },
+    {
+      "caller_file": "src/docshield/cli.py",
+      "caller_name": "_cmd_sanitize",
+      "callee_file": "src/docshield/pipeline.py",
+      "callee_name": "process_documents",
+      "confidence": 0.5
+    },
+    {
+      "caller_file": "src/docshield/cli.py",
+      "caller_name": "_cmd_sanitize",
+      "callee_file": "src/docshield/log.py",
+      "callee_name": "setup_logging",
+      "confidence": 0.5
+    },
+    {
+      "caller_file": "src/docshield/cli.py",
+      "caller_name": "_cmd_status",
+      "callee_file": "src/docshield/cli.py",
+      "callee_name": "_get_console",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/cli.py",
+      "caller_name": "main",
+      "callee_file": "src/docshield/config.py",
+      "callee_name": "PipelineConfig",
+      "confidence": 0.5
+    },
+    {
+      "caller_file": "src/docshield/cli.py",
+      "caller_name": "main",
+      "callee_file": "src/docshield/cli.py",
+      "callee_name": "_build_parser",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/cli.py",
+      "caller_name": "main",
+      "callee_file": "src/docshield/cli.py",
+      "callee_name": "_cmd_restore",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/cli.py",
+      "caller_name": "main",
+      "callee_file": "src/docshield/cli.py",
+      "callee_name": "_cmd_sanitize",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/cli.py",
+      "caller_name": "main",
+      "callee_file": "src/docshield/cli.py",
+      "callee_name": "_cmd_status",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/cli.py",
+      "caller_name": "main",
+      "callee_file": "src/docshield/interactive.py",
+      "callee_name": "run",
+      "confidence": 0.5
+    },
+    {
+      "caller_file": "src/docshield/cli.py",
+      "caller_name": "main",
+      "callee_file": "src/docshield/log.py",
+      "callee_name": "setup_logging",
+      "confidence": 0.5
+    },
+    {
+      "caller_file": "src/docshield/cli.py",
+      "caller_name": "on_progress",
+      "callee_file": "src/docshield/cli.py",
+      "callee_name": "_info",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/cli.py",
+      "caller_name": "restore",
+      "callee_file": "src/docshield/cli.py",
+      "callee_name": "_build_restore_parser",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/cli.py",
+      "caller_name": "restore",
+      "callee_file": "src/docshield/cli.py",
+      "callee_name": "_cmd_restore",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/engine/_worker.py",
+      "caller_name": "_run",
+      "callee_file": "src/docshield/engine/extractor.py",
+      "callee_name": "DocumentExtractor",
+      "confidence": 0.5
+    },
+    {
+      "caller_file": "src/docshield/engine/_worker.py",
+      "caller_name": "_run",
+      "callee_file": "src/docshield/engine/sanitizer.py",
+      "callee_name": "IntelligentSanitizer",
+      "confidence": 0.5
+    },
+    {
+      "caller_file": "src/docshield/engine/_worker.py",
+      "caller_name": "_run",
+      "callee_file": "src/docshield/config.py",
+      "callee_name": "PipelineConfig",
+      "confidence": 0.5
+    },
+    {
+      "caller_file": "src/docshield/engine/_worker.py",
+      "caller_name": "_run",
+      "callee_file": "src/docshield/engine/_worker.py",
+      "callee_name": "_emit",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/engine/_worker.py",
+      "caller_name": "_run",
+      "callee_file": "src/docshield/pipeline.py",
+      "callee_name": "collect_pdfs",
+      "confidence": 0.5
+    },
+    {
+      "caller_file": "src/docshield/engine/_worker.py",
+      "caller_name": "_run",
+      "callee_file": "src/docshield/pipeline.py",
+      "callee_name": "ensure_directories",
+      "confidence": 0.5
+    },
+    {
+      "caller_file": "src/docshield/engine/_worker.py",
+      "caller_name": "_run",
+      "callee_file": "src/docshield/engine/custom_terms.py",
+      "callee_name": "load_custom_terms",
+      "confidence": 0.5
+    },
+    {
+      "caller_file": "src/docshield/engine/_worker.py",
+      "caller_name": "_run",
+      "callee_file": "src/docshield/engine/_worker.py",
+      "callee_name": "on_progress",
+      "confidence": 0.8
+    },
+    {
+      "caller_file": "src/docshield/engine/_worker.py",
+      "caller_name": "_run",
+      "callee_file": "src/docshield/engine/_worker.py",
+      "callee_name": "on_start",
+      "confidence": 0.8
+    },
+    {
+      "caller_file": "src/docshield/engine/_worker.py",
+      "caller_name": "_run",
+      "callee_file": "src/docshield/pipeline.py",
+      "callee_name": "process_documents",
+      "confidence": 0.5
+    },
+    {
+      "caller_file": "src/docshield/engine/_worker.py",
+      "caller_name": "main",
+      "callee_file": "src/docshield/engine/_worker.py",
+      "callee_name": "_emit",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/engine/_worker.py",
+      "caller_name": "main",
+      "callee_file": "src/docshield/engine/_worker.py",
+      "callee_name": "_run",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/engine/_worker.py",
+      "caller_name": "on_progress",
+      "callee_file": "src/docshield/engine/_worker.py",
+      "callee_name": "_emit",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/engine/_worker.py",
+      "caller_name": "on_start",
+      "callee_file": "src/docshield/engine/_worker.py",
+      "callee_name": "_emit",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/engine/blocklist.py",
+      "caller_name": "is_blocked",
+      "callee_file": "src/docshield/engine/blocklist.py",
+      "callee_name": "_is_numeric_token",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/engine/extractor.py",
+      "caller_name": "__init__",
+      "callee_file": "src/docshield/engine/extractor.py",
+      "callee_name": "_build_converter",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/engine/patterns.py",
+      "caller_name": "_is_likely_surname",
+      "callee_file": "src/docshield/engine/patterns.py",
+      "callee_name": "_get_abbrev_name_reject",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/engine/patterns.py",
+      "caller_name": "detect_patterns",
+      "callee_file": "src/docshield/engine/patterns.py",
+      "callee_name": "PatternMatch",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/engine/patterns.py",
+      "caller_name": "detect_patterns",
+      "callee_file": "src/docshield/engine/patterns.py",
+      "callee_name": "_is_likely_surname",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/engine/postprocessor.py",
+      "caller_name": "_clean_image_regions",
+      "callee_file": "src/docshield/engine/postprocessor.py",
+      "callee_name": "_is_diagram_fragment",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/engine/postprocessor.py",
+      "caller_name": "postprocess_markdown",
+      "callee_file": "src/docshield/engine/postprocessor.py",
+      "callee_name": "_clean_image_regions",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/engine/postprocessor.py",
+      "caller_name": "postprocess_markdown",
+      "callee_file": "src/docshield/engine/postprocessor.py",
+      "callee_name": "_collapse_duplicate_columns",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/engine/postprocessor.py",
+      "caller_name": "postprocess_markdown",
+      "callee_file": "src/docshield/engine/postprocessor.py",
+      "callee_name": "_normalize_whitespace",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/engine/sanitizer.py",
+      "caller_name": "__init__",
+      "callee_file": "src/docshield/engine/sanitizer.py",
+      "callee_name": "_resolve_cached_model",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/engine/sanitizer.py",
+      "caller_name": "__init__",
+      "callee_file": "src/docshield/engine/sanitizer.py",
+      "callee_name": "_suppress_library_warnings",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/engine/sanitizer.py",
+      "caller_name": "_apply_replacements",
+      "callee_file": "src/docshield/engine/sanitizer.py",
+      "callee_name": "_normalize_label",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/engine/sanitizer.py",
+      "caller_name": "_collect_propagation_tokens",
+      "callee_file": "src/docshield/engine/sanitizer.py",
+      "callee_name": "IntelligentSanitizer",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/engine/sanitizer.py",
+      "caller_name": "_collect_propagation_tokens",
+      "callee_file": "src/docshield/engine/sanitizer.py",
+      "callee_name": "_is_likely_proper_name",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/engine/sanitizer.py",
+      "caller_name": "_consistency_scan",
+      "callee_file": "src/docshield/engine/sanitizer.py",
+      "callee_name": "_collect_propagation_tokens",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/engine/sanitizer.py",
+      "caller_name": "_consistency_scan",
+      "callee_file": "src/docshield/engine/sanitizer.py",
+      "callee_name": "_propagate_confirmed_entities",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/engine/sanitizer.py",
+      "caller_name": "_filter_blocked",
+      "callee_file": "src/docshield/engine/sanitizer.py",
+      "callee_name": "IntelligentSanitizer",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/engine/sanitizer.py",
+      "caller_name": "_filter_blocked",
+      "callee_file": "src/docshield/engine/sanitizer.py",
+      "callee_name": "_normalize_label",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/engine/sanitizer.py",
+      "caller_name": "_filter_blocked",
+      "callee_file": "src/docshield/engine/blocklist.py",
+      "callee_name": "is_blocked",
+      "confidence": 0.5
+    },
+    {
+      "caller_file": "src/docshield/engine/sanitizer.py",
+      "caller_name": "_validate_vault",
+      "callee_file": "src/docshield/engine/sanitizer.py",
+      "callee_name": "IntelligentSanitizer",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/engine/sanitizer.py",
+      "caller_name": "_validate_vault",
+      "callee_file": "src/docshield/engine/sanitizer.py",
+      "callee_name": "_looks_garbled",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/engine/sanitizer.py",
+      "caller_name": "sanitize",
+      "callee_file": "src/docshield/engine/sanitizer.py",
+      "callee_name": "_apply_custom_terms",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/engine/sanitizer.py",
+      "caller_name": "sanitize",
+      "callee_file": "src/docshield/engine/sanitizer.py",
+      "callee_name": "_apply_replacements",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/engine/sanitizer.py",
+      "caller_name": "sanitize",
+      "callee_file": "src/docshield/engine/sanitizer.py",
+      "callee_name": "_consistency_scan",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/engine/sanitizer.py",
+      "caller_name": "sanitize",
+      "callee_file": "src/docshield/engine/sanitizer.py",
+      "callee_name": "_filter_blocked",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/engine/sanitizer.py",
+      "caller_name": "sanitize",
+      "callee_file": "src/docshield/engine/sanitizer.py",
+      "callee_name": "_filter_by_confidence",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/engine/sanitizer.py",
+      "caller_name": "sanitize",
+      "callee_file": "src/docshield/engine/sanitizer.py",
+      "callee_name": "_inside_flag",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/engine/sanitizer.py",
+      "caller_name": "sanitize",
+      "callee_file": "src/docshield/engine/sanitizer.py",
+      "callee_name": "_validate_vault",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/engine/sanitizer.py",
+      "caller_name": "sanitize",
+      "callee_file": "src/docshield/engine/patterns.py",
+      "callee_name": "detect_patterns",
+      "confidence": 0.5
+    },
+    {
+      "caller_file": "src/docshield/interactive.py",
+      "caller_name": "__init__",
+      "callee_file": "src/docshield/interactive.py",
+      "callee_name": "__init__",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/interactive.py",
+      "caller_name": "__init__",
+      "callee_file": "src/docshield/log.py",
+      "callee_name": "setup_logging",
+      "confidence": 0.5
+    },
+    {
+      "caller_file": "src/docshield/interactive.py",
+      "caller_name": "_clipboard_approach",
+      "callee_file": "src/docshield/interactive.py",
+      "callee_name": "_copy_to_clipboard",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/interactive.py",
+      "caller_name": "_clipboard_approach",
+      "callee_file": "src/docshield/interactive.py",
+      "callee_name": "_human_size",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/interactive.py",
+      "caller_name": "_clipboard_approach",
+      "callee_file": "src/docshield/interactive.py",
+      "callee_name": "_prompt_feedback",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/interactive.py",
+      "caller_name": "_copy_prompt_with_docs",
+      "callee_file": "src/docshield/interactive.py",
+      "callee_name": "_clipboard_approach",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/interactive.py",
+      "caller_name": "_copy_prompt_with_docs",
+      "callee_file": "src/docshield/interactive.py",
+      "callee_name": "_copy_to_clipboard",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/interactive.py",
+      "caller_name": "_copy_prompt_with_docs",
+      "callee_file": "src/docshield/interactive.py",
+      "callee_name": "_file_approach",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/interactive.py",
+      "caller_name": "_copy_prompt_with_docs",
+      "callee_file": "src/docshield/interactive.py",
+      "callee_name": "_prompt_feedback",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/interactive.py",
+      "caller_name": "_copy_prompt_with_docs",
+      "callee_file": "src/docshield/interactive.py",
+      "callee_name": "_read_prompt",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/interactive.py",
+      "caller_name": "_copy_to_clipboard",
+      "callee_file": "src/docshield/interactive.py",
+      "callee_name": "run",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/interactive.py",
+      "caller_name": "_do_clean",
+      "callee_file": "src/docshield/interactive.py",
+      "callee_name": "_refresh_file_status",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/interactive.py",
+      "caller_name": "_exec_worker",
+      "callee_file": "src/docshield/interactive.py",
+      "callee_name": "_worker_msg",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/interactive.py",
+      "caller_name": "_file_approach",
+      "callee_file": "src/docshield/interactive.py",
+      "callee_name": "_copy_to_clipboard",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/interactive.py",
+      "caller_name": "_refresh_file_status",
+      "callee_file": "src/docshield/interactive.py",
+      "callee_name": "_file_summary",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/interactive.py",
+      "caller_name": "_refresh_file_status",
+      "callee_file": "src/docshield/interactive.py",
+      "callee_name": "_state",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/interactive.py",
+      "caller_name": "_run_sanitize",
+      "callee_file": "src/docshield/interactive.py",
+      "callee_name": "_exec_worker",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/interactive.py",
+      "caller_name": "_sanitize_done",
+      "callee_file": "src/docshield/interactive.py",
+      "callee_name": "_refresh_file_status",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/interactive.py",
+      "caller_name": "_state",
+      "callee_file": "src/docshield/interactive.py",
+      "callee_name": "_dir_files",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/interactive.py",
+      "caller_name": "action_clean_all",
+      "callee_file": "src/docshield/interactive.py",
+      "callee_name": "_do_clean",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/interactive.py",
+      "caller_name": "action_clean_llm",
+      "callee_file": "src/docshield/interactive.py",
+      "callee_name": "_do_clean",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/interactive.py",
+      "caller_name": "action_clean_mapping",
+      "callee_file": "src/docshield/interactive.py",
+      "callee_name": "_do_clean",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/interactive.py",
+      "caller_name": "action_clean_output",
+      "callee_file": "src/docshield/interactive.py",
+      "callee_name": "_do_clean",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/interactive.py",
+      "caller_name": "action_prompt_base",
+      "callee_file": "src/docshield/interactive.py",
+      "callee_name": "_copy_to_clipboard",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/interactive.py",
+      "caller_name": "action_prompt_base",
+      "callee_file": "src/docshield/interactive.py",
+      "callee_name": "_prompt_feedback",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/interactive.py",
+      "caller_name": "action_prompt_base",
+      "callee_file": "src/docshield/interactive.py",
+      "callee_name": "_read_prompt",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/interactive.py",
+      "caller_name": "action_prompt_compare",
+      "callee_file": "src/docshield/interactive.py",
+      "callee_name": "_copy_prompt_with_docs",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/interactive.py",
+      "caller_name": "action_prompt_extract",
+      "callee_file": "src/docshield/interactive.py",
+      "callee_name": "_copy_prompt_with_docs",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/interactive.py",
+      "caller_name": "action_prompt_summarize",
+      "callee_file": "src/docshield/interactive.py",
+      "callee_name": "_copy_prompt_with_docs",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/interactive.py",
+      "caller_name": "action_prompts",
+      "callee_file": "src/docshield/interactive.py",
+      "callee_name": "_human_size",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/interactive.py",
+      "caller_name": "action_prompts",
+      "callee_file": "src/docshield/interactive.py",
+      "callee_name": "_state",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/interactive.py",
+      "caller_name": "action_refresh_status",
+      "callee_file": "src/docshield/interactive.py",
+      "callee_name": "_refresh_file_status",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/interactive.py",
+      "caller_name": "action_restore",
+      "callee_file": "src/docshield/interactive.py",
+      "callee_name": "_human_size",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/interactive.py",
+      "caller_name": "action_restore",
+      "callee_file": "src/docshield/interactive.py",
+      "callee_name": "_refresh_file_status",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/interactive.py",
+      "caller_name": "action_restore",
+      "callee_file": "src/docshield/interactive.py",
+      "callee_name": "_state",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/interactive.py",
+      "caller_name": "action_restore",
+      "callee_file": "src/docshield/restore.py",
+      "callee_name": "build_master_vault",
+      "confidence": 0.5
+    },
+    {
+      "caller_file": "src/docshield/interactive.py",
+      "caller_name": "action_restore",
+      "callee_file": "src/docshield/restore.py",
+      "callee_name": "collect_llm_files",
+      "confidence": 0.5
+    },
+    {
+      "caller_file": "src/docshield/interactive.py",
+      "caller_name": "action_restore",
+      "callee_file": "src/docshield/restore.py",
+      "callee_name": "restore_file",
+      "confidence": 0.5
+    },
+    {
+      "caller_file": "src/docshield/interactive.py",
+      "caller_name": "action_sanitize",
+      "callee_file": "src/docshield/interactive.py",
+      "callee_name": "_run_sanitize",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/interactive.py",
+      "caller_name": "action_sanitize",
+      "callee_file": "src/docshield/interactive.py",
+      "callee_name": "_state",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/interactive.py",
+      "caller_name": "get_system_commands",
+      "callee_file": "src/docshield/interactive.py",
+      "callee_name": "get_system_commands",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/interactive.py",
+      "caller_name": "on_mount",
+      "callee_file": "src/docshield/interactive.py",
+      "callee_name": "_refresh_file_status",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/interactive.py",
+      "caller_name": "run",
+      "callee_file": "src/docshield/interactive.py",
+      "callee_name": "DocShieldApp",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/interactive.py",
+      "caller_name": "run",
+      "callee_file": "src/docshield/interactive.py",
+      "callee_name": "run",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/log.py",
+      "caller_name": "setup_logging",
+      "callee_file": "src/docshield/log.py",
+      "callee_name": "_JsonFormatter",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/pipeline.py",
+      "caller_name": "process_documents",
+      "callee_file": "src/docshield/models.py",
+      "callee_name": "RunResult",
+      "confidence": 0.5
+    },
+    {
+      "caller_file": "src/docshield/pipeline.py",
+      "caller_name": "process_documents",
+      "callee_file": "src/docshield/pipeline.py",
+      "callee_name": "collect_pdfs",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/pipeline.py",
+      "caller_name": "process_documents",
+      "callee_file": "src/docshield/cli.py",
+      "callee_name": "on_progress",
+      "confidence": 0.5
+    },
+    {
+      "caller_file": "src/docshield/pipeline.py",
+      "caller_name": "process_documents",
+      "callee_file": "src/docshield/engine/_worker.py",
+      "callee_name": "on_start",
+      "confidence": 0.5
+    },
+    {
+      "caller_file": "src/docshield/pipeline.py",
+      "caller_name": "process_documents",
+      "callee_file": "src/docshield/engine/extractor.py",
+      "callee_name": "pdf_to_markdown",
+      "confidence": 0.5
+    },
+    {
+      "caller_file": "src/docshield/pipeline.py",
+      "caller_name": "process_documents",
+      "callee_file": "src/docshield/engine/postprocessor.py",
+      "callee_name": "postprocess_markdown",
+      "confidence": 0.5
+    },
+    {
+      "caller_file": "src/docshield/pipeline.py",
+      "caller_name": "process_documents",
+      "callee_file": "src/docshield/engine/sanitizer.py",
+      "callee_name": "sanitize",
+      "confidence": 0.5
+    },
+    {
+      "caller_file": "src/docshield/reporting.py",
+      "caller_name": "print_report",
+      "callee_file": "src/docshield/reporting.py",
+      "callee_name": "_print_plain",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/restore.py",
+      "caller_name": "_normalize_escaped_flags",
+      "callee_file": "src/docshield/restore.py",
+      "callee_name": "_unescape",
+      "confidence": 0.8
+    },
+    {
+      "caller_file": "src/docshield/restore.py",
+      "caller_name": "restore_file",
+      "callee_file": "src/docshield/restore.py",
+      "callee_name": "RestoreResult",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/restore.py",
+      "caller_name": "restore_file",
+      "callee_file": "src/docshield/restore.py",
+      "callee_name": "restore_text",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/restore.py",
+      "caller_name": "restore_text",
+      "callee_file": "src/docshield/restore.py",
+      "callee_name": "_normalize_escaped_flags",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/restore.py",
+      "caller_name": "run_restorer",
+      "callee_file": "src/docshield/restore.py",
+      "callee_name": "build_master_vault",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/restore.py",
+      "caller_name": "run_restorer",
+      "callee_file": "src/docshield/restore.py",
+      "callee_name": "collect_llm_files",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/restore.py",
+      "caller_name": "run_restorer",
+      "callee_file": "src/docshield/restore.py",
+      "callee_name": "restore_file",
+      "confidence": 1.0
+    },
+    {
+      "caller_file": "src/docshield/restore.py",
+      "caller_name": "run_restorer",
+      "callee_file": "src/docshield/restore.py",
+      "callee_name": "restore_text",
+      "confidence": 1.0
+    }
+  ],
+  "imports": [],
+  "dead_code": [
+    {
+      "file": "src/docshield/interactive.py",
+      "name": "_sanitize_done",
+      "kind": "method"
+    },
+    {
+      "file": "src/docshield/interactive.py",
+      "name": "_sanitize_error",
+      "kind": "method"
+    },
+    {
+      "file": "src/docshield/interactive.py",
+      "name": "action_clean",
+      "kind": "method"
+    },
+    {
+      "file": "src/docshield/interactive.py",
+      "name": "action_clean_all",
+      "kind": "method"
+    },
+    {
+      "file": "src/docshield/interactive.py",
+      "name": "action_clean_llm",
+      "kind": "method"
+    },
+    {
+      "file": "src/docshield/interactive.py",
+      "name": "action_clean_mapping",
+      "kind": "method"
+    },
+    {
+      "file": "src/docshield/interactive.py",
+      "name": "action_clean_output",
+      "kind": "method"
+    },
+    {
+      "file": "src/docshield/interactive.py",
+      "name": "action_prompt_base",
+      "kind": "method"
+    },
+    {
+      "file": "src/docshield/interactive.py",
+      "name": "action_prompt_compare",
+      "kind": "method"
+    },
+    {
+      "file": "src/docshield/interactive.py",
+      "name": "action_prompt_extract",
+      "kind": "method"
+    },
+    {
+      "file": "src/docshield/interactive.py",
+      "name": "action_prompt_summarize",
+      "kind": "method"
+    },
+    {
+      "file": "src/docshield/interactive.py",
+      "name": "action_prompts",
+      "kind": "method"
+    },
+    {
+      "file": "src/docshield/interactive.py",
+      "name": "action_refresh_status",
+      "kind": "method"
+    },
+    {
+      "file": "src/docshield/interactive.py",
+      "name": "action_restore",
+      "kind": "method"
+    },
+    {
+      "file": "src/docshield/interactive.py",
+      "name": "action_sanitize",
+      "kind": "method"
+    },
+    {
+      "file": "src/docshield/interactive.py",
+      "name": "action_toggle_help",
+      "kind": "method"
+    },
+    {
+      "file": "src/docshield/interactive.py",
+      "name": "compose",
+      "kind": "method"
+    },
+    {
+      "file": "src/docshield/interactive.py",
+      "name": "on_mount",
+      "kind": "method"
+    },
+    {
+      "file": "src/docshield/log.py",
+      "name": "format",
+      "kind": "method"
+    },
+    {
+      "file": "src/docshield/log.py",
+      "name": "get_logger",
+      "kind": "function"
+    },
+    {
+      "file": "src/docshield/log.py",
+      "name": "reset_logging",
+      "kind": "function"
+    },
+    {
+      "file": "src/docshield/reporting.py",
+      "name": "print_report",
+      "kind": "function"
+    }
+  ],
+  "heritage": []
+}

@@ -174,6 +174,28 @@ uv run axon watch .        # Watch mode
 uv run pytest              # Run tests
 ```
 
+## Upstream Contributions (harshkedia177/axon)
+
+**CONTRIBUTING.md rules -- follow exactly:**
+
+1. **Issue first, code second.** Never submit a PR without an approved issue. Open issue -> wait for `approved` label -> then PR.
+2. **PR references issue.** Use "Closes #N" in the PR body.
+3. **No project-config files.** CLAUDE.md, .cursorrules, etc. are gitignored and must never appear in upstream PRs.
+4. **One logical change per PR.** Don't bundle fixes. Don't pad diffs.
+5. **Tests mandatory.** Every fix needs a regression test. Run `pytest --tb=short` before opening.
+6. **Lint clean.** `ruff check src/ tests/ --fix && ruff format src/ tests/`
+7. **Write like a human.** No AI patterns: no `**Bold Labels:**` in prose, no "## Problem / ## Solution" templates, no repeating yourself across related comments. Use contractions, be direct. When commenting on multiple related items, reference the first one -- don't copy-paste the same structure. A human has context and doesn't explain the same thing three times.
+8. **Clean commits.** No "Generated with Claude Code" or co-author lines. Commit messages: `<type>: <description>`, body explains why.
+
+**Open upstream issues (waiting for approval):**
+- #34: self/this method resolution in multi-class files
+- #35: git ref option injection in diff_branches
+- #36: CALL keyword over-blocked in axon_cypher
+
+**Filed upstream issues (informational):**
+- #12: Incremental reindex loses inbound cross-file edges
+- #13: Watch mode global phases never fire without new file events
+
 ## Conventions
 
 - Commits: conventional (`feat:`, `fix:`, `refactor:`)

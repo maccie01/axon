@@ -143,7 +143,7 @@ def process_heritage(
     *,
     parallel: bool = False,
     collect: bool = False,
-) -> list[ResolvedEdge] | None:
+) -> tuple[list[ResolvedEdge], list[NodePropertyPatch]] | list[ResolvedEdge] | None:
     """Create EXTENDS and IMPLEMENTS relationships from heritage tuples.
 
     For each ``(class_name, kind, parent_name)`` tuple in the parse results:
@@ -178,14 +178,16 @@ def process_heritage(
     flat_edges = [edge for edges, _ in all_results for edge in edges]
     flat_patches = [patch for _, patches in all_results for patch in patches]
 
-    # Always apply property patches (protocol/ABC annotations).
+    if collect:
+        # Defer all mutations — patches are applied by the caller after
+        # concurrent phases finish to avoid a read/write race on graph nodes.
+        return flat_edges, flat_patches
+
+    # Apply property patches (protocol/ABC annotations).
     for patch in flat_patches:
         node = graph.get_node(patch.node_id)
         if node is not None:
             node.properties[patch.key] = patch.value
-
-    if collect:
-        return flat_edges
 
     # Cross-file dedup by rel_id and write.
     written: set[str] = set()

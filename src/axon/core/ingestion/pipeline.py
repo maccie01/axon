@@ -38,7 +38,7 @@ from axon.core.ingestion.heritage import process_heritage
 from axon.core.ingestion.imports import process_imports
 from axon.core.ingestion.parser_phase import process_parsing
 from axon.core.ingestion.processes import process_processes
-from axon.core.ingestion.resolved import ResolvedEdge
+from axon.core.ingestion.resolved import NodePropertyPatch, ResolvedEdge
 from axon.core.ingestion.structure import process_structure
 from axon.core.ingestion.symbol_lookup import build_name_index
 from axon.core.ingestion.types import process_types
@@ -168,7 +168,19 @@ def run_pipeline(
 
     # Sequential batch write — all edges collected, graph is single-threaded.
     _write_collected_edges(calls_f.result() or [], graph)
-    _write_collected_edges(heritage_f.result() or [], graph)
+
+    heritage_result = heritage_f.result()
+    if isinstance(heritage_result, tuple):
+        heritage_edges, heritage_patches = heritage_result
+        _write_collected_edges(heritage_edges, graph)
+        # Apply deferred property patches (protocol/ABC annotations).
+        for patch in heritage_patches:
+            node = graph.get_node(patch.node_id)
+            if node is not None:
+                node.properties[patch.key] = patch.value
+    else:
+        _write_collected_edges(heritage_result or [], graph)
+
     _write_collected_edges(types_f.result() or [], graph)
     report("Resolving relationships", 1.0)
 

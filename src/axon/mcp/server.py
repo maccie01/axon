@@ -20,6 +20,7 @@ import asyncio
 import logging
 from contextlib import contextmanager
 from pathlib import Path
+from collections.abc import Callable
 from typing import Iterator
 
 from mcp.server import Server
@@ -86,6 +87,26 @@ def _open_storage() -> Iterator[KuzuBackend]:
         yield storage
     finally:
         storage.close()
+
+
+async def _with_storage(fn: Callable[[KuzuBackend], str]) -> str:
+    """Run *fn* against the appropriate storage backend.
+
+    Uses the injected persistent backend when available (with optional
+    async lock), otherwise opens a short-lived read-only connection.
+    """
+    if _storage is not None:
+        if _lock is not None:
+            async with _lock:
+                return await asyncio.to_thread(fn, _storage)
+        return await asyncio.to_thread(fn, _storage)
+
+    def _run() -> str:
+        with _open_storage() as st:
+            return fn(st)
+
+    return await asyncio.to_thread(_run)
+
 
 TOOLS: list[Tool] = [
     Tool(
@@ -228,20 +249,7 @@ def _dispatch_tool(name: str, arguments: dict, storage: KuzuBackend) -> str:
 async def call_tool(name: str, arguments: dict) -> list[TextContent]:
     """Dispatch a tool call to the appropriate handler."""
     try:
-        if _storage is not None:
-            # Persistent mode (got write lock): use injected storage + async lock.
-            if _lock is not None:
-                async with _lock:
-                    result = await asyncio.to_thread(_dispatch_tool, name, arguments, _storage)
-            else:
-                result = await asyncio.to_thread(_dispatch_tool, name, arguments, _storage)
-        else:
-            # Read-only fallback: short-lived connection per call.
-            def _run() -> str:
-                with _open_storage() as st:
-                    return _dispatch_tool(name, arguments, st)
-
-            result = await asyncio.to_thread(_run)
+        result = await _with_storage(lambda st: _dispatch_tool(name, arguments, st))
     except Exception as exc:
         logger.exception("Tool %s raised an unhandled exception", name)
         result = f"Internal error: {exc}"
@@ -287,19 +295,7 @@ def _dispatch_resource(uri_str: str, storage: KuzuBackend) -> str:
 async def read_resource(uri) -> str:
     """Read the contents of an Axon resource."""
     uri_str = str(uri)
-
-    if _storage is not None:
-        if _lock is not None:
-            async with _lock:
-                return await asyncio.to_thread(_dispatch_resource, uri_str, _storage)
-        return await asyncio.to_thread(_dispatch_resource, uri_str, _storage)
-
-    # Read-only fallback: short-lived connection per call.
-    def _run() -> str:
-        with _open_storage() as st:
-            return _dispatch_resource(uri_str, st)
-
-    return await asyncio.to_thread(_run)
+    return await _with_storage(lambda st: _dispatch_resource(uri_str, st))
 
 async def main() -> None:
     """Run the Axon MCP server over stdio transport."""

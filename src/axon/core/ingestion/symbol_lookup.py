@@ -1,8 +1,7 @@
 """Shared symbol lookup utilities for ingestion phases.
 
-Provides efficient line-based containment lookups using a pre-built
-per-file interval index, replacing the O(N) scan approach with
-O(log N) binary search.
+Provides line-based containment lookups using a pre-built per-file
+interval index.
 """
 
 from __future__ import annotations
@@ -34,45 +33,39 @@ def build_name_index(
 
 
 class FileSymbolIndex:
-    """Pre-built per-file interval index for fast containment lookups.
+    """Pre-built per-file interval index for containment lookups.
 
     Stores ``(start_line, end_line, span, node_id)`` tuples sorted by
-    ``start_line`` alongside a pre-computed ``start_lines`` list for
-    O(log N) binary search without per-lookup list creation.
+    ``start_line``.  Lookups scan all entries for a file to find the
+    narrowest containing span (typically <200 symbols per file).
     """
 
-    __slots__ = ("_entries", "_start_lines")
+    __slots__ = ("_entries",)
 
     def __init__(
         self,
         entries: dict[str, list[tuple[int, int, int, str]]],
-        start_lines: dict[str, list[int]],
     ) -> None:
         self._entries = entries
-        self._start_lines = start_lines
 
     def get_entries(self, file_path: str) -> list[tuple[int, int, int, str]] | None:
         return self._entries.get(file_path)
-
-    def get_start_lines(self, file_path: str) -> list[int] | None:
-        return self._start_lines.get(file_path)
 
 def build_file_symbol_index(
     graph: KnowledgeGraph,
     labels: tuple[NodeLabel, ...],
 ) -> FileSymbolIndex:
-    """Build a per-file sorted interval index for fast containment lookups.
+    """Build a per-file sorted interval index for containment lookups.
 
     For each file, symbols are stored as ``(start_line, end_line, span, node_id)``
-    tuples sorted by ``start_line``.  A pre-computed ``start_lines`` list per file
-    avoids redundant list creation during lookups.
+    tuples sorted by ``start_line``.
 
     Args:
         graph: The knowledge graph containing parsed symbol nodes.
         labels: Which node labels to include in the index.
 
     Returns:
-        A :class:`FileSymbolIndex` with entries and pre-computed start lines.
+        A :class:`FileSymbolIndex` with entries per file.
     """
     entries: dict[str, list[tuple[int, int, int, str]]] = defaultdict(list)
 
@@ -87,11 +80,7 @@ def build_file_symbol_index(
     for file_entries in entries.values():
         file_entries.sort(key=lambda t: t[0])
 
-    start_lines: dict[str, list[int]] = {
-        fp: [e[0] for e in file_entries] for fp, file_entries in entries.items()
-    }
-
-    return FileSymbolIndex(entries, start_lines)
+    return FileSymbolIndex(entries)
 
 def find_containing_symbol(
     line: int,
@@ -99,9 +88,6 @@ def find_containing_symbol(
     file_symbol_index: FileSymbolIndex,
 ) -> str | None:
     """Find the most specific symbol whose line range contains *line*.
-
-    Uses binary search on the pre-built index for O(log N) lookup instead
-    of scanning all nodes.
 
     Args:
         line: The source line number to look up.

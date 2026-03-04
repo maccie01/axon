@@ -13,7 +13,8 @@ from axon.config.languages import get_language, is_supported
 
 # Directories to prune during os.walk() — never descend into these.
 _PRUNE_DIRS: frozenset[str] = frozenset(
-    p for p in DEFAULT_IGNORE_PATTERNS if "*" not in p and "." not in p or p.startswith(".")
+    p for p in DEFAULT_IGNORE_PATTERNS
+    if ("*" not in p and "." not in p) or p.startswith(".")
 ) | frozenset({
     ".git", "node_modules", "__pycache__", ".venv", "venv", ".env",
     "dist", "build", ".idea", ".vscode", ".mypy_cache", ".pytest_cache",

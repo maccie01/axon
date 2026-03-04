@@ -1,0 +1,208 @@
+# Ground truth: every symbol that MUST exist in the graph after indexing.
+# Format: file path relative to golden codebase root, symbol name, type.
+# types: function, class, method, property
+
+symbols:
+  # auth/__init__.py -- re-exports only, no new symbols defined
+  - file: "python/auth/__init__.py"
+    name: "__init__"
+    # no standalone functions defined here
+
+  # auth/service.py
+  - file: "python/auth/service.py"
+    name: "Authenticator"
+    type: class
+
+  - file: "python/auth/service.py"
+    name: "BaseAuth"
+    type: class
+
+  - file: "python/auth/service.py"
+    name: "BaseAuth.authenticate"
+    type: method
+
+  - file: "python/auth/service.py"
+    name: "BaseAuth._log"
+    type: method
+
+  - file: "python/auth/service.py"
+    name: "AuthService"
+    type: class
+
+  - file: "python/auth/service.py"
+    name: "AuthService.__init__"
+    type: method
+
+  - file: "python/auth/service.py"
+    name: "AuthService.authenticate"
+    type: method
+
+  - file: "python/auth/service.py"
+    name: "AuthService.from_env"
+    type: method
+
+  - file: "python/auth/service.py"
+    name: "AuthService.hash_token"
+    type: method
+
+  - file: "python/auth/service.py"
+    name: "AuthService.is_configured"
+    type: method
+
+  - file: "python/auth/service.py"
+    name: "AuthService.async_authenticate"
+    type: method
+
+  - file: "python/auth/service.py"
+    name: "validate_token"
+    type: function
+
+  - file: "python/auth/service.py"
+    name: "init"
+    type: function
+
+  - file: "python/auth/service.py"
+    name: "_internal_helper"
+    type: function
+
+  - file: "python/auth/service.py"
+    name: "_dead_in_service"
+    type: function
+
+  # auth/validators.py
+  - file: "python/auth/validators.py"
+    name: "TokenClaims"
+    type: class
+
+  - file: "python/auth/validators.py"
+    name: "validate_claims"
+    type: function
+
+  - file: "python/auth/validators.py"
+    name: "check_expiry"
+    type: function
+
+  - file: "python/auth/validators.py"
+    name: "validate"
+    type: function
+
+  - file: "python/auth/validators.py"
+    name: "_unused_validator"
+    type: function
+
+  # auth/_legacy.py -- dead module, but symbols still extracted
+  - file: "python/auth/_legacy.py"
+    name: "old_validate"
+    type: function
+
+  - file: "python/auth/_legacy.py"
+    name: "old_check"
+    type: function
+
+  - file: "python/auth/_legacy.py"
+    name: "LegacyAuthProvider"
+    type: class
+
+  - file: "python/auth/_legacy.py"
+    name: "LegacyAuthProvider.check"
+    type: method
+
+  # payments/__init__.py
+  # (no standalone functions defined)
+
+  # payments/processor.py
+  - file: "python/payments/processor.py"
+    name: "PaymentProcessor"
+    type: class
+
+  - file: "python/payments/processor.py"
+    name: "PaymentProcessor.__init__"
+    type: method
+
+  - file: "python/payments/processor.py"
+    name: "PaymentProcessor.process"
+    type: method
+
+  - file: "python/payments/processor.py"
+    name: "PaymentProcessor.refund"
+    type: method
+
+  - file: "python/payments/processor.py"
+    name: "charge_card"
+    type: function
+
+  - file: "python/payments/processor.py"
+    name: "_internal_retry"
+    type: function
+
+  # payments/gateway.py
+  - file: "python/payments/gateway.py"
+    name: "retry"
+    type: function
+
+  - file: "python/payments/gateway.py"
+    name: "send_to_gateway"
+    type: function
+
+  - file: "python/payments/gateway.py"
+    name: "validate"
+    type: function
+
+  - file: "python/payments/gateway.py"
+    name: "_unused_gateway_helper"
+    type: function
+
+  # utils/helpers.py
+  - file: "python/utils/helpers.py"
+    name: "format_amount"
+    type: function
+
+  - file: "python/utils/helpers.py"
+    name: "truncate"
+    type: function
+
+  - file: "python/utils/helpers.py"
+    name: "sanitize_input"
+    type: function
+
+  - file: "python/utils/helpers.py"
+    name: "validate"
+    type: function
+
+  - file: "python/utils/helpers.py"
+    name: "_private_util"
+    type: function
+
+  - file: "python/utils/helpers.py"
+    name: "_truly_dead"
+    type: function
+
+  # utils/_unused_helper.py -- dead module
+  - file: "python/utils/_unused_helper.py"
+    name: "dead_function_one"
+    type: function
+
+  - file: "python/utils/_unused_helper.py"
+    name: "dead_function_two"
+    type: function
+
+  - file: "python/utils/_unused_helper.py"
+    name: "DeadClass"
+    type: class
+
+  - file: "python/utils/_unused_helper.py"
+    name: "DeadClass.method"
+    type: method
+
+  # main.py
+  - file: "python/main.py"
+    name: "startup"
+    type: function
+
+  - file: "python/main.py"
+    name: "run"
+    type: function
+
+metrics:
+  minimum_precision: 0.90
+  minimum_recall: 0.90

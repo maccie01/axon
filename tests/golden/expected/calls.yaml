@@ -1,0 +1,145 @@
+# Ground truth: call edges that MUST and MUST NOT exist in the graph.
+# source/target format: "file::symbol_name" (file relative to golden codebase root)
+# non_edges: false positive detection -- these edges MUST NOT be in the graph.
+
+edges:
+  # auth/service.py -- AuthService.authenticate calls validate_token (same file)
+  - source: "python/auth/service.py::AuthService.authenticate"
+    target: "python/auth/service.py::validate_token"
+    note: "intra-file call"
+
+  # auth/service.py -- validate_token calls validate_claims (cross-file)
+  - source: "python/auth/service.py::validate_token"
+    target: "python/auth/validators.py::validate_claims"
+    note: "cross-file call, imported at top"
+
+  # auth/service.py -- validate_token calls check_expiry (cross-file)
+  - source: "python/auth/service.py::validate_token"
+    target: "python/auth/validators.py::check_expiry"
+    note: "cross-file call, imported at top"
+
+  # auth/service.py -- AuthService.__init__ calls super().__init__()
+  - source: "python/auth/service.py::AuthService.__init__"
+    target: "python/auth/service.py::BaseAuth.__init__"
+    note: "super() call -- known edge case #34"
+    known_limitation: true  # Axon does not resolve super() targets
+
+  # auth/service.py -- AuthService.async_authenticate calls self.authenticate
+  - source: "python/auth/service.py::AuthService.async_authenticate"
+    target: "python/auth/service.py::AuthService.authenticate"
+    note: "self method call"
+
+  # auth/service.py -- AuthService.from_env calls cls() (constructor)
+  - source: "python/auth/service.py::AuthService.from_env"
+    target: "python/auth/service.py::AuthService.__init__"
+    note: "classmethod calling constructor"
+    known_limitation: true  # Axon does not resolve cls() constructor calls
+
+  # payments/processor.py -- charge_card calls validate_token from auth.service
+  - source: "python/payments/processor.py::charge_card"
+    target: "python/auth/service.py::validate_token"
+    note: "CRITICAL: must resolve to auth.service.validate_token, NOT auth.validators.validate or utils.helpers.validate"
+
+  # payments/processor.py -- charge_card calls send_to_gateway
+  - source: "python/payments/processor.py::charge_card"
+    target: "python/payments/gateway.py::send_to_gateway"
+    note: "cross-file call"
+
+  # payments/processor.py -- PaymentProcessor.process calls self._auth.authenticate
+  - source: "python/payments/processor.py::PaymentProcessor.process"
+    target: "python/auth/service.py::AuthService.authenticate"
+    note: "method call via composition"
+    known_limitation: true  # Axon does not resolve self.attr.method() via type inference
+
+  # payments/processor.py -- PaymentProcessor.process calls charge_card (same file)
+  - source: "python/payments/processor.py::PaymentProcessor.process"
+    target: "python/payments/processor.py::charge_card"
+    note: "intra-file call"
+
+  # payments/processor.py -- PaymentProcessor.refund calls validate_claims
+  - source: "python/payments/processor.py::PaymentProcessor.refund"
+    target: "python/auth/validators.py::validate_claims"
+    note: "cross-file call"
+
+  # payments/processor.py -- PaymentProcessor.refund calls validate (payments.gateway)
+  - source: "python/payments/processor.py::PaymentProcessor.refund"
+    target: "python/payments/gateway.py::validate"
+    note: "calls payments.gateway.validate, NOT auth.validators.validate or utils.helpers.validate"
+
+  # main.py -- startup calls init from auth.service
+  - source: "python/main.py::startup"
+    target: "python/auth/service.py::init"
+    note: "CRITICAL: must resolve to auth.service.init, not any other init"
+
+  # main.py -- run calls AuthService.from_env
+  - source: "python/main.py::run"
+    target: "python/auth/service.py::AuthService.from_env"
+    note: "classmethod call"
+
+  # main.py -- run calls PaymentProcessor.__init__ (via constructor)
+  - source: "python/main.py::run"
+    target: "python/payments/processor.py::PaymentProcessor.__init__"
+    note: "constructor call"
+    known_limitation: true  # Axon does not resolve ClassName() constructor calls to __init__
+
+  # main.py -- run calls processor.process
+  - source: "python/main.py::run"
+    target: "python/payments/processor.py::PaymentProcessor.process"
+    note: "method call"
+    known_limitation: true  # Axon does not resolve method calls on local variables without type inference
+
+  # auth/_legacy.py -- LegacyAuthProvider.check calls old_validate (intra-file)
+  - source: "python/auth/_legacy.py::LegacyAuthProvider.check"
+    target: "python/auth/_legacy.py::old_validate"
+    note: "dead module internal call -- still a valid CALLS edge"
+
+  # utils/_unused_helper.py -- DeadClass.method calls dead_function_one
+  - source: "python/utils/_unused_helper.py::DeadClass.method"
+    target: "python/utils/_unused_helper.py::dead_function_one"
+    note: "dead module internal call"
+
+  # auth/service.py -- _dead_in_service calls _internal_helper
+  - source: "python/auth/service.py::_dead_in_service"
+    target: "python/auth/service.py::_internal_helper"
+    note: "dead function calling another intra-file function"
+
+non_edges:
+  # CRITICAL false positive tests -- same-name function disambiguation
+
+  # charge_card must NOT call auth.validators.validate (wrong validate)
+  - source: "python/payments/processor.py::charge_card"
+    target: "python/auth/validators.py::validate"
+    reason: "charge_card imports validate_token from auth.service, not validate from auth.validators"
+
+  # charge_card must NOT call utils.helpers.validate (wrong validate)
+  - source: "python/payments/processor.py::charge_card"
+    target: "python/utils/helpers.py::validate"
+    reason: "charge_card does not import from utils.helpers"
+
+  # startup must NOT call utils.helpers.validate (wildcard import noise)
+  - source: "python/main.py::startup"
+    target: "python/utils/helpers.py::validate"
+    reason: "startup only calls init(), wildcard import must not create phantom call edges"
+
+  # legacy module must NOT be called from anywhere live
+  - source: "python/auth/service.py::validate_token"
+    target: "python/auth/_legacy.py::old_validate"
+    reason: "_legacy.py is never imported"
+
+  - source: "python/payments/processor.py::charge_card"
+    target: "python/auth/_legacy.py::old_validate"
+    reason: "_legacy.py is never imported"
+
+  # PaymentProcessor.refund must NOT call auth.validators.validate
+  - source: "python/payments/processor.py::PaymentProcessor.refund"
+    target: "python/auth/validators.py::validate"
+    reason: "refund imports validate from payments.gateway, not auth.validators"
+
+  # _internal_helper must NOT be reachable from outside auth/service.py
+  - source: "python/payments/processor.py::charge_card"
+    target: "python/auth/service.py::_internal_helper"
+    reason: "_internal_helper is a private function never imported"
+
+metrics:
+  minimum_precision: 0.85
+  minimum_recall: 0.80

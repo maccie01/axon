@@ -13,6 +13,7 @@ from axon.mcp.tools import (
     _format_query_results,
     _group_by_process,
     handle_context,
+    handle_coupling,
     handle_cypher,
     handle_dead_code,
     handle_detect_changes,
@@ -522,3 +523,40 @@ class TestImpactDepthGrouping:
         mock_storage.traverse_with_depth.return_value = []
         result = handle_impact(mock_storage, "validate", depth=100)
         assert "No upstream callers found" in result
+
+
+class TestHandleCoupling:
+    def test_returns_coupled_files(self, mock_storage):
+        mock_storage.execute_raw.side_effect = [
+            [["src/auth/session.py", 0.85, 12], ["src/tests/test_login.py", 0.72, 9]],
+            [["src/auth/session.py"]],
+        ]
+        result = handle_coupling(mock_storage, "src/auth/login.py")
+        assert "src/auth/session.py" in result
+        assert "0.85" in result
+        assert "src/tests/test_login.py" in result
+
+    def test_flags_hidden_dependencies(self, mock_storage):
+        mock_storage.execute_raw.side_effect = [
+            [["src/tests/test_login.py", 0.72, 9]],
+            [],
+        ]
+        result = handle_coupling(mock_storage, "src/auth/login.py")
+        assert "hidden" in result.lower()
+
+    def test_no_coupling_found(self, mock_storage):
+        mock_storage.execute_raw.side_effect = [[], []]
+        result = handle_coupling(mock_storage, "src/isolated.py")
+        assert "No temporal coupling" in result
+
+    def test_min_strength_filter(self, mock_storage):
+        mock_storage.execute_raw.side_effect = [
+            [["src/weak.py", 0.2, 2]],
+            [],
+        ]
+        result = handle_coupling(mock_storage, "src/a.py", min_strength=0.3)
+        assert "No temporal coupling" in result
+
+    def test_empty_file_path(self, mock_storage):
+        result = handle_coupling(mock_storage, "")
+        assert "required" in result.lower()

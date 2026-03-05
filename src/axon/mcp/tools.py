@@ -482,3 +482,71 @@ def handle_cypher(storage: StorageBackend, query: str) -> str:
         lines.append(f"  {i}. {' | '.join(formatted_values)}")
 
     return "\n".join(lines)
+
+
+def handle_coupling(
+    storage: StorageBackend, file_path: str, min_strength: float = 0.3
+) -> str:
+    """Query temporal coupling for a file and flag hidden dependencies.
+
+    Retrieves ``COUPLED_WITH`` edges for the given file, filters by minimum
+    strength, and cross-checks against ``IMPORTS`` edges to identify files
+    that are frequently co-changed but lack a static import relationship.
+
+    Args:
+        storage: The storage backend.
+        file_path: Path of the file to analyse.
+        min_strength: Minimum coupling strength threshold (default 0.3).
+
+    Returns:
+        Formatted coupling report with hidden-dependency warnings.
+    """
+    if not file_path or not file_path.strip():
+        return "Error: 'file_path' parameter is required and cannot be empty."
+
+    file_path = file_path.strip()
+    if not _SAFE_PATH.match(file_path):
+        return "Error: file path contains unsafe characters."
+
+    escaped = _escape_cypher(file_path)
+    rows = storage.execute_raw(
+        f"MATCH (a:File)-[r:COUPLED_WITH]-(b:File) "
+        f"WHERE a.file_path = '{escaped}' "
+        f"RETURN b.file_path, r.strength, r.co_changes "
+        f"ORDER BY r.strength DESC"
+    ) or []
+
+    rows = [r for r in rows if (r[1] or 0) >= min_strength]
+
+    if not rows:
+        return f"No temporal coupling found for '{file_path}' (min strength: {min_strength})."
+
+    import_rows = storage.execute_raw(
+        f"MATCH (a:File)-[:IMPORTS]-(b:File) "
+        f"WHERE a.file_path = '{escaped}' "
+        f"RETURN b.file_path"
+    ) or []
+    imported_files = {r[0] for r in import_rows}
+
+    lines = [f"Temporal coupling for: {file_path}"]
+    lines.append("=" * 48)
+    lines.append("")
+
+    for i, row in enumerate(rows, 1):
+        coupled_path = row[0] or "?"
+        strength = row[1] or 0.0
+        co_changes = row[2] or 0
+        has_import = coupled_path in imported_files
+        import_flag = "imports: yes" if has_import else "imports: no \u26a0\ufe0f"
+        lines.append(
+            f"  {i}. {coupled_path}  strength: {strength:.2f}  "
+            f"co_changes: {co_changes}  ({import_flag})"
+        )
+
+    lines.append("")
+    hidden = [r[0] for r in rows if r[0] not in imported_files]
+    if hidden:
+        lines.append(
+            f"\u26a0\ufe0f {len(hidden)} file(s) have hidden dependencies (no static import)."
+        )
+    return "\n".join(lines)

@@ -1,10 +1,6 @@
-"""Tests for axon.config.ignore and axon.config.languages."""
-
 from __future__ import annotations
 
 from pathlib import Path
-
-import pytest
 
 from axon.config.ignore import (
     DEFAULT_IGNORE_PATTERNS,
@@ -17,15 +13,10 @@ from axon.config.languages import (
     is_supported,
 )
 
-
-# ---------------------------------------------------------------------------
 # ignore.py tests
-# ---------------------------------------------------------------------------
 
 
 class TestShouldIgnore:
-    """Tests for should_ignore()."""
-
     def test_node_modules_subpath(self) -> None:
         assert should_ignore("node_modules/foo.py") is True
 
@@ -80,8 +71,6 @@ class TestShouldIgnore:
 
 
 class TestLoadGitignore:
-    """Tests for load_gitignore()."""
-
     def test_reads_gitignore(self, tmp_path: Path) -> None:
         gitignore = tmp_path / ".gitignore"
         gitignore.write_text(
@@ -113,8 +102,6 @@ class TestLoadGitignore:
 
 
 class TestDefaultIgnorePatterns:
-    """Sanity checks on the constant itself."""
-
     def test_is_frozenset(self) -> None:
         assert isinstance(DEFAULT_IGNORE_PATTERNS, frozenset)
 
@@ -124,14 +111,10 @@ class TestDefaultIgnorePatterns:
         assert ".git" in DEFAULT_IGNORE_PATTERNS
 
 
-# ---------------------------------------------------------------------------
 # languages.py tests
-# ---------------------------------------------------------------------------
 
 
 class TestGetLanguage:
-    """Tests for get_language()."""
-
     def test_python(self) -> None:
         assert get_language("src/main.py") == "python"
 
@@ -139,7 +122,7 @@ class TestGetLanguage:
         assert get_language("components/App.ts") == "typescript"
 
     def test_typescript_tsx(self) -> None:
-        assert get_language("components/App.tsx") == "typescript"
+        assert get_language("components/App.tsx") == "tsx"
 
     def test_javascript_js(self) -> None:
         assert get_language("index.js") == "javascript"
@@ -170,8 +153,6 @@ class TestGetLanguage:
 
 
 class TestIsSupported:
-    """Tests for is_supported()."""
-
     def test_supported_py(self) -> None:
         assert is_supported("main.py") is True
 
@@ -189,8 +170,6 @@ class TestIsSupported:
 
 
 class TestSupportedExtensions:
-    """Sanity checks on the constant."""
-
     def test_is_dict(self) -> None:
         assert isinstance(SUPPORTED_EXTENSIONS, dict)
 

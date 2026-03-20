@@ -20,6 +20,7 @@ wheels/
 # OS
 .DS_Store
 
+
 # Project-local config (not for upstream)
 CLAUDE.md
 .cluster/
@@ -27,3 +28,9 @@ TIMELINE.md
 
 # Git worktrees
 .worktrees/
+
+# Upstream additions
+docs/
+node_modules/
+.claude/
+.agents/

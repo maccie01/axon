@@ -9,6 +9,8 @@ to Symbol.
 from __future__ import annotations
 
 import logging
+import threading
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from typing import Any
@@ -23,6 +25,8 @@ from axon.core.graph.model import (
 )
 from axon.core.ingestion.walker import FileEntry
 from axon.core.parsers.base import LanguageParser, ParseResult
+from axon.core.parsers.python_lang import PythonParser
+from axon.core.parsers.typescript import TypeScriptParser
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +39,14 @@ _KIND_TO_LABEL: dict[str, NodeLabel] = {
     "enum": NodeLabel.ENUM,
 }
 
+
+_PARSER_FACTORIES: dict[str, Callable[[], LanguageParser]] = {
+    "python": PythonParser,
+    "typescript": lambda: TypeScriptParser(dialect="typescript"),
+    "tsx": lambda: TypeScriptParser(dialect="tsx"),
+    "javascript": lambda: TypeScriptParser(dialect="javascript"),
+}
+
 @dataclass
 class FileParseData:
     """Parse results for a single file, kept for later phases."""
@@ -44,6 +56,7 @@ class FileParseData:
     parse_result: ParseResult
 
 _PARSER_CACHE: dict[str, LanguageParser] = {}
+_PARSER_CACHE_LOCK = threading.Lock()
 
 def get_parser(language: str) -> LanguageParser:
     """Return the appropriate tree-sitter parser for *language*.
@@ -63,30 +76,21 @@ def get_parser(language: str) -> LanguageParser:
     cached = _PARSER_CACHE.get(language)
     if cached is not None:
         return cached
+    with _PARSER_CACHE_LOCK:
+        cached = _PARSER_CACHE.get(language)
+        if cached is not None:
+            return cached
 
-    if language == "python":
-        from axon.core.parsers.python_lang import PythonParser
+        factory = _PARSER_FACTORIES.get(language)
+        if factory is None:
+            raise ValueError(
+                f"Unsupported language {language!r}. "
+                f"Expected one of: python, typescript, tsx, javascript"
+            )
 
-        parser = PythonParser()
-
-    elif language == "typescript":
-        from axon.core.parsers.typescript import TypeScriptParser
-
-        parser = TypeScriptParser(dialect="typescript")
-
-    elif language == "javascript":
-        from axon.core.parsers.typescript import TypeScriptParser
-
-        parser = TypeScriptParser(dialect="javascript")
-
-    else:
-        raise ValueError(
-            f"Unsupported language {language!r}. "
-            f"Expected one of: python, typescript, javascript"
-        )
-
-    _PARSER_CACHE[language] = parser
-    return parser
+        parser = factory()
+        _PARSER_CACHE[language] = parser
+        return parser
 
 def parse_file(file_path: str, content: str, language: str) -> FileParseData:
     """Parse a single file and return structured parse data.
@@ -137,7 +141,6 @@ def process_parsing(
         A list of :class:`FileParseData` objects that carry the full parse
         results (imports, calls, heritage, type_refs) for use by later phases.
     """
-    # Phase 1: Parse all files in parallel.
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         all_parse_data = list(
             executor.map(
@@ -146,12 +149,10 @@ def process_parsing(
             )
         )
 
-    # Phase 2: Graph mutation (sequential — not thread-safe).
     for file_entry, parse_data in zip(files, all_parse_data):
         file_id = generate_id(NodeLabel.FILE, file_entry.path)
         exported_names: set[str] = set(parse_data.parse_result.exports)
 
-        # Build class -> base class names for storing on class nodes.
         class_bases: dict[str, list[str]] = {}
         for cls_name, kind, parent_name in parse_data.parse_result.heritage:
             if kind == "extends":
@@ -168,8 +169,6 @@ def process_parsing(
                 )
                 continue
 
-            # For methods, use "ClassName.method_name" as the symbol name
-            # to disambiguate methods across different classes.
             symbol_name = (
                 f"{symbol.class_name}.{symbol.name}"
                 if symbol.kind == "method" and symbol.class_name

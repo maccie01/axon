@@ -1,14 +1,9 @@
-"""Phase 10: Dead code detection for Axon.
-
-Scans the knowledge graph to find unreachable symbols (functions, methods,
-classes) that have zero incoming CALLS relationships and are not entry points,
-exported, constructors, test functions, or dunder methods.  Flags them by
-setting ``is_dead = True`` on the corresponding graph node.
-"""
+"""Phase 10: Dead code detection for Axon."""
 
 from __future__ import annotations
 
 import logging
+from pathlib import PurePosixPath
 
 from axon.core.graph.graph import KnowledgeGraph
 from axon.core.graph.model import GraphNode, NodeLabel, RelType
@@ -24,36 +19,22 @@ _SYMBOL_LABELS: tuple[NodeLabel, ...] = (
 _CONSTRUCTOR_NAMES: frozenset[str] = frozenset({"__init__", "__new__"})
 
 def _is_test_class(name: str) -> bool:
-    """Return ``True`` if *name* follows pytest class convention (``Test*``).
-
-    Matches names starting with ``Test`` where the next character is uppercase,
-    e.g. ``TestHandleQuery``, ``TestBulkLoad``.
-    """
     return len(name) > 4 and name.startswith("Test") and name[4].isupper()
 
 def _is_test_file(file_path: str) -> bool:
-    """Return ``True`` if the file is in a test directory or is a test file.
-
-    Matches paths containing ``/tests/`` or files named ``test_*.py``.
-    """
-    return "/tests/" in file_path or "/test_" in file_path or file_path.endswith("conftest.py")
+    parts = PurePosixPath(file_path).parts
+    return (
+        "tests" in parts
+        or "test" in parts
+        or any(p.startswith("test_") for p in parts)
+        or file_path.endswith("conftest.py")
+    )
 
 def _is_dunder(name: str) -> bool:
-    """Return ``True`` if *name* is a dunder (double-underscore) method.
-
-    Dunders start and end with ``__`` and have at least one character in
-    between (e.g. ``__str__``, ``__repr__``).
-    """
     return name.startswith("__") and name.endswith("__") and len(name) > 4
 
 def _is_type_referenced(graph: KnowledgeGraph, node_id: str, label: NodeLabel) -> bool:
-    """Return ``True`` if *node_id* is a class with incoming USES_TYPE edges.
-
-    Classes referenced via type annotations (enums, dataclasses, Protocol
-    classes) are not dead — they are actively used as types.  This check
-    is restricted to CLASS nodes; a function used only in a type annotation
-    is legitimately unused.
-    """
+    """Return True if node_id is a CLASS with incoming USES_TYPE edges."""
     if label != NodeLabel.CLASS:
         return False
     return graph.has_incoming(node_id, RelType.USES_TYPE)
@@ -76,7 +57,6 @@ _FRAMEWORK_DECORATOR_NAMES: frozenset[str] = frozenset({
 })
 
 def _has_framework_decorator(node: GraphNode) -> bool:
-    """Return ``True`` if *node* has a framework decorator (dotted or undotted)."""
     decorators: list[str] = node.properties.get("decorators", [])
     return any(
         dec in _FRAMEWORK_DECORATOR_NAMES or ("." in dec and dec not in _NON_FRAMEWORK_DECORATORS)
@@ -84,7 +64,6 @@ def _has_framework_decorator(node: GraphNode) -> bool:
     )
 
 def _has_property_decorator(node: GraphNode) -> bool:
-    """Return ``True`` if *node* is a ``@property`` (accessed as attribute, not called)."""
     decorators: list[str] = node.properties.get("decorators", [])
     return "property" in decorators
 
@@ -94,7 +73,6 @@ _TYPING_STUB_DECORATORS: frozenset[str] = frozenset({
 })
 
 def _has_typing_stub_decorator(node: GraphNode) -> bool:
-    """Return ``True`` if *node* is an ``@overload`` or ``@abstractmethod`` stub."""
     decorators: list[str] = node.properties.get("decorators", [])
     return any(d in _TYPING_STUB_DECORATORS for d in decorators)
 
@@ -103,32 +81,17 @@ _ENUM_BASES: frozenset[str] = frozenset({
 })
 
 def _is_enum_class(node: GraphNode, label: NodeLabel) -> bool:
-    """Return ``True`` if *node* is an enum class (members accessed via dot, not called)."""
     if label != NodeLabel.CLASS:
         return False
     bases: list[str] = node.properties.get("bases", [])
     return bool(_ENUM_BASES & set(bases))
 
 def _is_python_public_api(name: str, file_path: str) -> bool:
-    """Return ``True`` if *name* is a public symbol in an ``__init__.py`` file."""
     return file_path.endswith("__init__.py") and not name.startswith("_")
 
 def _is_exempt(
     name: str, is_entry_point: bool, is_exported: bool, file_path: str = ""
 ) -> bool:
-    """Return ``True`` if the symbol is exempt from dead-code flagging.
-
-    A symbol is exempt when ANY of the following hold:
-
-    - It is marked as an entry point.
-    - It is marked as exported (may be used externally).
-    - It is a constructor (``__init__`` / ``__new__``).
-    - It is a test function (name starts with ``test_``).
-    - It is a test class (name starts with ``Test``).
-    - It lives in a test file (fixtures, helpers are not dead code).
-    - It is a dunder method (``__str__``, ``__repr__``, etc.).
-    - It is a public symbol in a Python ``__init__.py`` file.
-    """
     return (
         is_entry_point
         or is_exported
@@ -141,21 +104,12 @@ def _is_exempt(
     )
 
 def _clear_override_false_positives(graph: KnowledgeGraph) -> int:
-    """Un-flag methods that override a non-dead base class method.
-
-    When ``A extends B`` and ``B.method`` is called, ``A.method`` (the
-    override) has zero incoming CALLS and gets flagged dead.  This pass
-    detects that situation and clears ``is_dead`` on the override.
-
-    Returns the number of overrides un-flagged.
-    """
-    # Build a mapping: class_name -> set of method names that are NOT dead.
+    """Un-flag methods that override a non-dead base class method."""
     alive_methods_by_class: dict[str, set[str]] = {}
     for method in graph.get_nodes_by_label(NodeLabel.METHOD):
         if not method.is_dead and method.class_name:
             alive_methods_by_class.setdefault(method.class_name, set()).add(method.name)
 
-    # Build child -> parent class mapping from EXTENDS relationships.
     child_to_parents: dict[str, list[str]] = {}
     for rel in graph.get_relationships_by_type(RelType.EXTENDS):
         child_node = graph.get_node(rel.source)
@@ -180,41 +134,23 @@ def _clear_override_false_positives(graph: KnowledgeGraph) -> int:
     return cleared
 
 def _clear_protocol_conformance_false_positives(graph: KnowledgeGraph) -> int:
-    """Un-flag methods on classes that structurally conform to a Protocol.
-
-    When a Protocol defines methods ``{m1, m2, m3}`` and a concrete class
-    implements all of those methods without an explicit EXTENDS edge
-    (structural subtyping), the concrete methods may be flagged dead
-    because CALLS edges resolve to the Protocol's stubs, not the
-    concrete implementations.
-
-    This pass:
-
-    1. Finds Protocol classes (annotated with ``is_protocol`` in properties).
-    2. Collects their non-dunder method names as the required interface.
-    3. Finds non-Protocol classes whose methods are a superset.
-    4. Un-flags dead methods whose name is in the protocol interface.
-
-    Returns the number of methods un-flagged.
-    """
-    protocol_methods: dict[str, set[str]] = {}
-    for cls_node in graph.get_nodes_by_label(NodeLabel.CLASS):
-        if not cls_node.properties.get("is_protocol"):
-            continue
-        methods = set()
-        for method in graph.get_nodes_by_label(NodeLabel.METHOD):
-            if method.class_name == cls_node.name and not _is_dunder(method.name):
-                methods.add(method.name)
-        if methods:
-            protocol_methods[cls_node.name] = methods
-
-    if not protocol_methods:
-        return 0
-
+    """Un-flag methods on classes that structurally conform to a Protocol."""
     class_methods: dict[str, set[str]] = {}
     for method in graph.get_nodes_by_label(NodeLabel.METHOD):
         if method.class_name:
             class_methods.setdefault(method.class_name, set()).add(method.name)
+
+    protocol_methods: dict[str, set[str]] = {}
+    for cls_node in graph.get_nodes_by_label(NodeLabel.CLASS):
+        if not cls_node.properties.get("is_protocol"):
+            continue
+        methods = class_methods.get(cls_node.name, set())
+        non_dunder = {m for m in methods if not _is_dunder(m)}
+        if non_dunder:
+            protocol_methods[cls_node.name] = non_dunder
+
+    if not protocol_methods:
+        return 0
 
     clearable: dict[str, set[str]] = {}
     for proto_name, required in protocol_methods.items():
@@ -244,14 +180,7 @@ def _clear_protocol_conformance_false_positives(graph: KnowledgeGraph) -> int:
     return cleared
 
 def _clear_protocol_stub_false_positives(graph: KnowledgeGraph) -> int:
-    """Un-flag methods on Protocol classes.
-
-    Protocol stubs define the interface contract — they are never called
-    directly (calls resolve to concrete implementations).  Flagging them
-    as dead is always a false positive.
-
-    Returns the number of methods un-flagged.
-    """
+    """Un-flag methods on Protocol classes (stubs are never called directly)."""
     protocol_class_names: set[str] = set()
     for cls_node in graph.get_nodes_by_label(NodeLabel.CLASS):
         if cls_node.properties.get("is_protocol"):
@@ -330,16 +259,8 @@ def process_dead_code(graph: KnowledgeGraph) -> int:
             dead_count += 1
             logger.debug("Dead symbol: %s (%s)", node.name, node.id)
 
-    # Second pass: un-flag overrides of called base-class methods.
-    cleared = _clear_override_false_positives(graph)
-    dead_count -= cleared
+    dead_count -= _clear_override_false_positives(graph)
+    dead_count -= _clear_protocol_conformance_false_positives(graph)
+    dead_count -= _clear_protocol_stub_false_positives(graph)
 
-    # Third pass: un-flag methods on classes that structurally conform to a Protocol.
-    protocol_cleared = _clear_protocol_conformance_false_positives(graph)
-    dead_count -= protocol_cleared
-
-    # Fourth pass: un-flag Protocol class stubs (interface contracts, never called directly).
-    stub_cleared = _clear_protocol_stub_false_positives(graph)
-    dead_count -= stub_cleared
-
-    return dead_count
+    return max(0, dead_count)

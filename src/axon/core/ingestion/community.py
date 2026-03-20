@@ -1,9 +1,4 @@
-"""Phase 8: Community detection for Axon.
-
-Uses igraph + leidenalg to partition the call graph into functional clusters
-(communities). Each community groups tightly-connected symbols that likely
-belong to the same logical feature or module.
-"""
+"""Phase 8: Community detection for Axon."""
 
 from __future__ import annotations
 
@@ -31,13 +26,23 @@ _CALLABLE_LABELS: tuple[NodeLabel, ...] = (
     NodeLabel.CLASS,
 )
 
+_HERITAGE_EDGE_TYPES: tuple[RelType, ...] = (
+    RelType.EXTENDS,
+    RelType.IMPLEMENTS,
+    RelType.USES_TYPE,
+)
+_CALLS_WEIGHT = 1.0
+_HERITAGE_WEIGHT = 0.5
+
+
 def export_to_igraph(
     graph: KnowledgeGraph,
 ) -> tuple[ig.Graph, dict[int, str]]:
-    """Extract the call graph from *graph* and build an igraph representation.
+    """Extract the call + heritage graph and build an igraph representation.
 
-    Only Function, Method, and Class nodes are included. Only CALLS
-    relationships between those nodes are used as edges.
+    Includes Function, Method, and Class nodes. CALLS edges get weight 1.0;
+    EXTENDS, IMPLEMENTS, and USES_TYPE edges get weight 0.5 so heritage
+    relationships influence community structure without dominating.
 
     Args:
         graph: The Axon knowledge graph.
@@ -58,15 +63,28 @@ def export_to_igraph(
     num_vertices = len(node_id_to_index)
 
     edge_list: list[tuple[int, int]] = []
+    edge_weights: list[float] = []
+
     for rel in graph.get_relationships_by_type(RelType.CALLS):
         src_idx = node_id_to_index.get(rel.source)
         tgt_idx = node_id_to_index.get(rel.target)
         if src_idx is not None and tgt_idx is not None:
             edge_list.append((src_idx, tgt_idx))
+            edge_weights.append(_CALLS_WEIGHT)
+
+    for rel_type in _HERITAGE_EDGE_TYPES:
+        for rel in graph.get_relationships_by_type(rel_type):
+            src_idx = node_id_to_index.get(rel.source)
+            tgt_idx = node_id_to_index.get(rel.target)
+            if src_idx is not None and tgt_idx is not None:
+                edge_list.append((src_idx, tgt_idx))
+                edge_weights.append(_HERITAGE_WEIGHT)
 
     ig_graph = ig.Graph(directed=True)
     ig_graph.add_vertices(num_vertices)
     ig_graph.add_edges(edge_list)
+    if edge_weights:
+        ig_graph.es["weight"] = edge_weights
 
     return ig_graph, index_to_node_id
 
@@ -102,11 +120,9 @@ def generate_label(graph: KnowledgeGraph, member_ids: list[str]) -> str:
     counts = Counter(directories)
     most_common = counts.most_common(2)
 
-    if len(most_common) == 1 or most_common[0][0] == most_common[-1][0]:
-        # All members in the same directory.
+    if len(most_common) == 1:
         return most_common[0][0].capitalize()
 
-    # Mixed directories: combine top two.
     label = f"{most_common[0][0]}+{most_common[1][0]}"
     return label.capitalize()
 
@@ -141,10 +157,10 @@ def process_communities(
         )
         return 0
 
+    weights = ig_graph.es["weight"] if ig_graph.ecount() > 0 and "weight" in ig_graph.es.attributes() else None
     partition = leidenalg.find_partition(
-        ig_graph, leidenalg.ModularityVertexPartition
+        ig_graph, leidenalg.ModularityVertexPartition, weights=weights
     )
-    modularity_score = partition.modularity
 
     community_count = 0
     for i, members in enumerate(partition):
@@ -152,6 +168,11 @@ def process_communities(
             continue
 
         member_ids = [index_to_node_id[idx] for idx in members]
+
+        subgraph = ig_graph.induced_subgraph(members)
+        n_members = len(members)
+        max_edges = n_members * (n_members - 1)
+        density = subgraph.ecount() / max_edges if max_edges > 0 else 0.0
 
         community_id = generate_id(NodeLabel.COMMUNITY, f"community_{i}")
         label = generate_label(graph, member_ids)
@@ -161,7 +182,7 @@ def process_communities(
             label=NodeLabel.COMMUNITY,
             name=label,
             properties={
-                "cohesion": modularity_score,
+                "cohesion": density,
                 "symbol_count": len(member_ids),
             },
         )
@@ -180,11 +201,11 @@ def process_communities(
 
         community_count += 1
         logger.info(
-            "Community %d: %r with %d members (modularity=%.3f)",
+            "Community %d: %r with %d members (density=%.3f)",
             i,
             label,
             len(member_ids),
-            modularity_score,
+            density,
         )
 
     logger.info(

@@ -1,5 +1,3 @@
-"""Tests for the dead code detection phase (Phase 10)."""
-
 from __future__ import annotations
 
 import pytest
@@ -15,11 +13,6 @@ from axon.core.graph.model import (
 from axon.core.ingestion.dead_code import process_dead_code
 
 
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
-
 def _add_file_node(graph: KnowledgeGraph, path: str) -> str:
     """Add a File node and return its ID."""
     node_id = generate_id(NodeLabel.FILE, path)
@@ -32,7 +25,6 @@ def _add_file_node(graph: KnowledgeGraph, path: str) -> str:
         )
     )
     return node_id
-
 
 def _add_symbol_node(
     graph: KnowledgeGraph,
@@ -62,7 +54,6 @@ def _add_symbol_node(
     )
     return node_id
 
-
 def _add_calls_relationship(
     graph: KnowledgeGraph,
     source_id: str,
@@ -78,12 +69,6 @@ def _add_calls_relationship(
             target=target_id,
         )
     )
-
-
-# ---------------------------------------------------------------------------
-# Fixture
-# ---------------------------------------------------------------------------
-
 
 @pytest.fixture()
 def graph() -> KnowledgeGraph:
@@ -134,15 +119,7 @@ def graph() -> KnowledgeGraph:
 
     return g
 
-
-# ---------------------------------------------------------------------------
-# Tests
-# ---------------------------------------------------------------------------
-
-
 class TestDetectsUnusedFunction:
-    """Unused helper functions with no incoming calls are flagged as dead."""
-
     def test_detects_unused_function(self, graph: KnowledgeGraph) -> None:
         process_dead_code(graph)
 
@@ -153,10 +130,7 @@ class TestDetectsUnusedFunction:
         assert node is not None
         assert node.is_dead is True
 
-
 class TestSkipsEntryPoints:
-    """Entry points are never flagged as dead, even without incoming calls."""
-
     def test_skips_entry_points(self, graph: KnowledgeGraph) -> None:
         process_dead_code(graph)
 
@@ -165,10 +139,7 @@ class TestSkipsEntryPoints:
         assert node is not None
         assert node.is_dead is False
 
-
 class TestSkipsCalledFunctions:
-    """Functions with incoming CALLS relationships are not flagged."""
-
     def test_skips_called_functions(self, graph: KnowledgeGraph) -> None:
         process_dead_code(graph)
 
@@ -179,10 +150,7 @@ class TestSkipsCalledFunctions:
         assert node is not None
         assert node.is_dead is False
 
-
 class TestSkipsConstructors:
-    """__init__ and __new__ methods are never flagged as dead."""
-
     def test_skips_constructors(self, graph: KnowledgeGraph) -> None:
         process_dead_code(graph)
 
@@ -193,10 +161,7 @@ class TestSkipsConstructors:
         assert node is not None
         assert node.is_dead is False
 
-
 class TestSkipsTestFunctions:
-    """Test functions (test_*) are never flagged as dead."""
-
     def test_skips_test_functions(self, graph: KnowledgeGraph) -> None:
         process_dead_code(graph)
 
@@ -207,10 +172,7 @@ class TestSkipsTestFunctions:
         assert node is not None
         assert node.is_dead is False
 
-
 class TestSkipsDunderMethods:
-    """Dunder methods (__str__, __repr__, etc.) are never flagged as dead."""
-
     def test_skips_dunder_methods(self) -> None:
         g = KnowledgeGraph()
         _add_file_node(g, "src/models.py")
@@ -247,30 +209,18 @@ class TestSkipsDunderMethods:
         assert repr_node is not None
         assert repr_node.is_dead is False
 
-
 class TestReturnsCount:
-    """process_dead_code returns the correct count of dead symbols."""
-
     def test_returns_count(self, graph: KnowledgeGraph) -> None:
         count = process_dead_code(graph)
 
         # unused_helper and orphan_function are the two dead symbols.
         assert count == 2
 
-
 class TestEmptyGraph:
-    """An empty graph produces zero dead symbols."""
-
     def test_empty_graph(self) -> None:
         g = KnowledgeGraph()
         count = process_dead_code(g)
         assert count == 0
-
-
-# ---------------------------------------------------------------------------
-# Helpers for USES_TYPE and EXTENDS relationships
-# ---------------------------------------------------------------------------
-
 
 def _add_uses_type_relationship(
     graph: KnowledgeGraph,
@@ -288,15 +238,7 @@ def _add_uses_type_relationship(
         )
     )
 
-
-# ---------------------------------------------------------------------------
-# USES_TYPE tests
-# ---------------------------------------------------------------------------
-
-
 class TestSkipsTypeReferencedClasses:
-    """Classes with incoming USES_TYPE edges are not flagged as dead."""
-
     def test_class_with_uses_type_not_dead(self) -> None:
         g = KnowledgeGraph()
         _add_file_node(g, "src/models.py")
@@ -318,7 +260,6 @@ class TestSkipsTypeReferencedClasses:
         assert node.is_dead is False
 
     def test_function_with_only_uses_type_still_dead(self) -> None:
-        """Functions referenced only as types ARE dead (not classes)."""
         g = KnowledgeGraph()
         _add_file_node(g, "src/utils.py")
         _add_file_node(g, "src/handler.py")
@@ -338,15 +279,7 @@ class TestSkipsTypeReferencedClasses:
         assert node is not None
         assert node.is_dead is True
 
-
-# ---------------------------------------------------------------------------
-# Framework decorator tests
-# ---------------------------------------------------------------------------
-
-
 class TestSkipsFrameworkDecoratedFunctions:
-    """Functions with framework-registration decorators are not flagged dead."""
-
     def test_framework_decorated_function_not_dead(self) -> None:
         g = KnowledgeGraph()
         _add_file_node(g, "src/server.py")
@@ -362,7 +295,6 @@ class TestSkipsFrameworkDecoratedFunctions:
         assert node.is_dead is False
 
     def test_simple_decorator_still_dead(self) -> None:
-        """Decorators without dots (e.g., @staticmethod) do not exempt."""
         g = KnowledgeGraph()
         _add_file_node(g, "src/utils.py")
         node_id = _add_symbol_node(
@@ -377,7 +309,6 @@ class TestSkipsFrameworkDecoratedFunctions:
         assert node.is_dead is True
 
     def test_typing_overload_decorator_exempts(self) -> None:
-        """@typing.overload stubs are not dead — they define type signatures."""
         g = KnowledgeGraph()
         _add_file_node(g, "src/utils.py")
         node_id = _add_symbol_node(
@@ -392,7 +323,6 @@ class TestSkipsFrameworkDecoratedFunctions:
         assert node.is_dead is False
 
     def test_functools_wraps_still_dead(self) -> None:
-        """Known non-framework dotted decorators (functools.wraps) don't exempt."""
         g = KnowledgeGraph()
         _add_file_node(g, "src/utils.py")
         node_id = _add_symbol_node(
@@ -406,15 +336,7 @@ class TestSkipsFrameworkDecoratedFunctions:
 
         assert node.is_dead is True
 
-
-# ---------------------------------------------------------------------------
-# Protocol conformance tests
-# ---------------------------------------------------------------------------
-
-
 class TestProtocolConformance:
-    """Methods on classes structurally conforming to a Protocol are not dead."""
-
     def test_conforming_class_methods_not_dead(self) -> None:
         g = KnowledgeGraph()
         _add_file_node(g, "src/base.py")
@@ -471,7 +393,6 @@ class TestProtocolConformance:
         assert g.get_node(impl_close_id).is_dead is False
 
     def test_non_conforming_class_still_dead(self) -> None:
-        """A class with only some protocol methods is still flagged dead."""
         g = KnowledgeGraph()
         _add_file_node(g, "src/base.py")
         _add_file_node(g, "src/partial.py")

@@ -11,6 +11,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
 
+
 class NodeLabel(Enum):
     """Labels for graph nodes representing code-level entities."""
 
@@ -53,7 +54,8 @@ def generate_id(label: NodeLabel, file_path: str, symbol_name: str = "") -> str:
     Returns:
         A colon-separated string suitable for use as a graph node ID.
     """
-    return f"{label.value}:{file_path}:{symbol_name}"
+    normalized = file_path.replace("\\", "/")
+    return f"{label.value}:{normalized}:{symbol_name}"
 
 @dataclass
 class GraphNode:
